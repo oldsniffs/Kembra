@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<girl gender="f">
+	<I1>
+		<speak pause="True">{sock.player.name}... What did you say? <i>What's your name?</i></speak>
+		<narrator>This time you manage to speak your name.</narrator>
+		<speak pause="True">Ok, that's good, {sock.player.name}. I think you're actually going to be ok.</speak>
+		<acts></acts>
+	</I1>
+</girl>

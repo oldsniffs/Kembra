@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--TODO: Remove zone xy
+TODO: Consider Hangar, Bay names being assembled by xyz coordinates
+TODO: Read in as "Station: Kembra, Docking Ring"
+-->
+<world>
+	<zone>
+		<xy>10,10</xy>
+		<type>Station</type>
+		<name>Kembra</name>
+		<description></description>
+
+		<locations>
+
+
+			<location>
+				<xyz>1,5,7</xyz>
+				<name>Hangar 7, Bay 5</name>
+				<physical_description>{self.name} is the end of the hangar.</physical_description>
+				<harvestables>Ship Charger</harvestables>
+				<interactables>Ship Diagnostics</interactables>
+				<items></items>
+				<buildings></buildings>
+				<exits></exits>
+			</location>
+
+			<location>
+				<xyz>1,4,7</xyz>
+				<name>Hangar 7, Bay 4</name>
+				<physical_description>One hut stands at the edge of the forest.</physical_description>
+				<harvestables></harvestables>
+				<interactables></interactables>
+				<items>
+				</items>
+				<buildings></buildings>
+				<exits></exits> <!--needs to give name and destination, generate exit object-->
+			</location>
+
+			<location>
+				<xyz>1,3,7</xyz>
+				<name>Hangar 7, Bay 3</name>
+				<physical_description></physical_description>
+				<harvestables></harvestables>
+				<interactables></interactables>
+				<items>
+					<item>
+						<item_class>Cremip</item_class>
+					</item>
+				</items>
+				<buildings>village hall</buildings>
+				<exits></exits>
+			</location>
+
+			<location>
+				<xyz>1,2,7</xyz>
+				<name>Hangar 7, Bay 2</name>
+				<physical_description></physical_description>
+				<harvestables></harvestables>
+				<interactables></interactables>
+				<items></items>
+				<buildings>jero_hut, roda_hut</buildings>
+				<exits></exits>
+			</location>
+
+			<location>
+				<xyz>1,1,7</xyz>
+				<name>Hangar 7, Bay 1</name>
+				<physical_description>(A stream) runs out of the mountains past the edge of the village.</physical_description>
+				<harvestables>Crivet's Stream</harvestables>
+				<interactables></interactables>
+				<items></items>
+				<buildings></buildings>
+				<exits></exits>
+			</location>
+
+		</locations>
+
+	</zone>
+</world>
+
+
+<!--
+			<location>
+				<xyz></xyz>
+				<name></name>
+				<physical_description></physical_description>
+				<distant_description></distant_description>
+				<harvestables></harvestables>
+				<interactables></interactables>
+				<items></items>
+				<buildings></buildings>
+				<exits></exits>
+			</location>
+-->

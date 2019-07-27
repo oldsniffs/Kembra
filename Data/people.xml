@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<people> <!-- For python # p for p in people if p.tag == 'person' -->
+
+	<groups>
+		<group name="House"> <!--locations.py will attach player's name to "House"-->
+			<knowledge>
+				<basic>Your house...</basic>
+			</knowledge>
+			<members></members> <!---Members at the creation of world-->
+			<leader></leader>
+			<other_officers></other_officers>
+			<talk>
+				<talkset name="Basic">
+					<our_group></our_group>
+				</talkset>
+			</talk>
+
+
+		</group>
+	</groups>
+
+
+<!--
+
+	<person>
+		<name></name>
+		<physical_description></physical_description>
+		<height></height>
+		<weight></weight>
+		<factions>
+			<faction esteem=0></faction>
+
+
+Members is initialized members.
+
+<group name="House">
+			<knowledge>
+				<basic>Your house...</basic>
+			</knowledge>
+			<members></members>
+			<leader></leader>
+			<other_officers></other_officers>
+			<talksets>
+				<talkset name="Basic">
+					<our_group></our_group>
+					<hostile></hostile>
+				</talkset>
+				
+
+				</talkset>
+			</talksets>
+
+		</group>
+-->
+
+There's no way to no from this point of time, so let it unfold.

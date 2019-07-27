@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<items>
+
+	<consumables readin='True'>
+		<calories>0</calories>
+
+		<foods>
+
+			<fish readin='True'>
+				<name>fish</name>
+				<plural_name>fish</plural_name>
+				<grouping>normal</grouping>
+
+				<stanget readin='True'>
+					<name>river stanget</name>
+					<plural_name>river stangets</plural_name>
+					<description>A typical-looking freshwater fish. Average shape with brown and dark green scales. Large enough to provide a hearty meal for one person.</description>
+					<weight>5</weight>
+					<volume>5</volume>
+					<calories>650</calories>
+				</stanget>
+
+				<cremip readin='True'>
+					<name>cremip</name>
+					<plural_name>cremips</plural_name>
+					<description>A small, slimy freshwater fish. Long and thin with silver scales. Rather small to eat.</description>
+					<weight>2</weight>
+					<volume>2</volume>
+					<calories>50</calories>
+				</cremip>
+
+			</fish>
+
+		</foods>
+
+
+	</consumables>
+
+	<weapons>
+
+		<arrow readin='True'>
+			<grouping>stack</grouping>
+			<stack_name>bundle</stack_name>
+			<name>arrow</name>
+			<plural_name>arrows</plural_name>
+			<quantity>1</quantity>
+			<description></description>
+			<weight></weight>
+			<volume></volume>
+			<strength></strength>
+
+		</arrow>
+	<!-- Some attributes will be invariable to the object. A 'x' spear will always be the same length. But other attributes, representing the quality of the item will vary depending on the materials and craftsmanship that went into its production -->
+	</weapons>
+
+	<coins>
+	</coins>
+
+</items>

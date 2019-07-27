@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--This file contains information for all harvestables, the raw materials extracted from them, and all other raw materials-->
+
+<harvestables>
+
+	<replenishing>
+	<!-- Grown harvestables will produce determinant with the quality of the land they occupy -->
+		<trees>
+		
+			<ashwood>
+				<name>Ashwood</name>
+				<description></description>
+				<growth_rate>40</growth_rate> <!-- Amount of days for 5% of recovery at standard precipitation-->
+				<harvest rate>
+				<produce name='Ashwood' type='Wood'>
+					<description>A light, tough, and flexible wood.</description>
+					<knowledge>
+						<weapon_crafting>Ashwood's value is in its relative strength for how light it is. Thus, Ashwood made weapons are ideal for use by those with less strength. While it is too flimsy to make good large spears, it is useful for short spears and ideal for bows.<weapon_crafting>
+					</knowledge>
+					<density>4</density>
+					<strength>7</strength>
+					<elasticity>8</elasticity>
+				<produce>
+			</ashwood>
+			
+			<corbea>
+				<name>Corbea</name>
+				<description>Looking nearly dead</description>
+				<produce>
+			</corbea>
+			
+			<poliset>
+			</poliset>
+			
+			<kanishan>
+			</kanishan>
+			
+			
+			
+	</replenishing>
+	
+	<finite>
+	
+		<mines>
+		</mines>
+	
+	</finite>
+	
+	<other_raw_materials>
+	</other_raw_materials>
+
+</harvestables>

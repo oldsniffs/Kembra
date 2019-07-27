@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<people>
+
+	<person name=''>
+		<gender>female</gender>
+		<age>38</age>
+		<weight></weight>
+		
+
+	</person>
+
+	<person name="mish">
+		<gender>male</gender>
+		<age>31</age>
+		<
+	</person>
+
+
+</people>
