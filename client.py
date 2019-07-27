@@ -109,6 +109,7 @@ class Client(tk.Tk):
 
         self.send_message(login_name)
 
+        kill_color_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         response_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         if not len(response_header):
             return False
@@ -137,13 +138,14 @@ class Client(tk.Tk):
 
         while True:
             try:
+                broadcast_color_code = self.socket.recv(HEADER_LENGTH).decode('utf-8').strip()
                 broadcast_header = self.socket.recv(HEADER_LENGTH)
                 if not broadcast_header:
                     return
                 broadcast_length = int(broadcast_header.decode('utf-8'))
                 broadcast = self.socket.recv(broadcast_length).decode('utf-8')
 
-                self.display_text_output(broadcast)
+                self.display_text_output(broadcast, color_code=broadcast_color_code)
             except RuntimeError as e:
                 print(f'RuntimeError: {e}. Goodbye!')
                 return
@@ -157,6 +159,10 @@ class Client(tk.Tk):
             return None
         elif player_input == 'menu':
             pass
+        elif player_input[0] == '\'' or player_input[0] == '!':
+            # TODO: check for invalid chars
+            self.send_message(player_input, code='02')
+            return False
 
         words = player_input.lower().split()
 
@@ -242,9 +248,10 @@ class Client(tk.Tk):
         pass
 
     def display_text_output(self, text, pattern1=None, tag1=None, pattern2=None, tag2=None, command_readback=False,
-                            tagging='default'):
+                            color_code='default'):
 
-        if command_readback == True:
+        # TODO: Add new line to the end so new ">" won't be colored
+        if command_readback:
             text = text + '\n'
 
         else:
@@ -252,7 +259,10 @@ class Client(tk.Tk):
 
         self.game_screen.output_display.display_text(text)
 
-        if tagging == 'future default':
+        if color_code == 'speech':
+            self.game_screen.output_display.apply_tag_to_pattern(text, 'dark-turquoise')
+
+        elif color_code == 'future default':
 
             self.game_screen.output_display.apply_tag_to_pattern(self.player.location.name, 'dark-turquoise')
             self.game_screen.output_display.apply_tag_to_pattern(self.player.location.zone.name, 'dark-turquoise')
