@@ -60,9 +60,9 @@ class Client(tk.Tk):
 
     def login_prompt(self):
         self.bind_login()
-        self.display_text_output('Your essence is drawn through space and time to a particular point.')
-        self.display_text_output('You sense your destination is nearing...')
-        self.display_text_output('As you are pulled into the fire, you must decide: Who are you?')
+        self.display_text_output('Your essence is drawn through space and time to a particular point.', color_code='narrator')
+        self.display_text_output('You sense your destination is nearing...', color_code='narrator')
+        self.display_text_output('As you are pulled into the fire, you must decide: Who are you?', color_code='narrator')
 
         self.bind_login()
 
@@ -100,16 +100,15 @@ class Client(tk.Tk):
         login_name = self.get_player_input()
 
         if not login_name:
-            self.display_text_output('You must give a name to incarnate.')
+            self.display_text_output('You must give a name to incarnate.', color_code='narrator')
             return False
 
         if not login_name.isalpha():
-            self.display_text_output('One\'s name must be speakable. Offer another...')
+            self.display_text_output('One\'s name must be speakable. Offer another...', color_code='narrator')
             return False
 
         self.send_message(login_name)
 
-        absorb_color_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         response_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         if not len(response_header):
             return False
@@ -122,12 +121,6 @@ class Client(tk.Tk):
         self.listen_thread = threading.Thread(target=self.listen_for_broadcasts, name='listen thread')
         self.listen_thread.start()
 
-    def receive_broadcast(self):
-        message_header = self.socket.recv(HEADER_LENGTH)
-        message_length = int(message_header.decode('utf-8'))
-        message = self.socket.recv(message_length).decode('utf-8')
-        return message
-
     def refresh_socket(self):
         self.socket.close()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -138,14 +131,13 @@ class Client(tk.Tk):
 
         while True:
             try:
-                broadcast_color_code = self.socket.recv(HEADER_LENGTH).decode('utf-8').strip()
                 broadcast_header = self.socket.recv(HEADER_LENGTH)
                 if not broadcast_header:
                     return
                 broadcast_length = int(broadcast_header.decode('utf-8'))
                 broadcast = self.socket.recv(broadcast_length).decode('utf-8')
 
-                self.display_text_output(broadcast, color_code=broadcast_color_code)
+                self.display_text_output(broadcast)
             except RuntimeError as e:
                 print(f'RuntimeError: {e}. Goodbye!')
                 return
@@ -174,7 +166,7 @@ class Client(tk.Tk):
             self.send_message(f'{words[0]:<{VERB_HEADER_LENGTH}}'+' '.join(words[1:]), code='01')
 
         else:
-            self.display_text_output(f'You want to {words[0]}? I don\'t even know what that is...')
+            self.display_text_output(f'You want to {words[0]}? I don\'t even know what that is...', color_code='narrator')
             return False
 
     def send_message(self, message, code='00'):
@@ -254,20 +246,11 @@ class Client(tk.Tk):
 
         if color_code == 'speech':
             self.game_screen.output_display.apply_tag_to_pattern(text, 'light-turquoise')
-
-        elif color_code == 'future default':
-
-            self.game_screen.output_display.apply_tag_to_pattern(self.player.location.name, 'dark-turquoise')
-            self.game_screen.output_display.apply_tag_to_pattern(self.player.location.zone.name, 'dark-turquoise')
-
-            for e in self.player.location.capitalize_exits():
-                self.game_screen.output_display.apply_tag_to_pattern(e, 'dark-turquoise')
-            for i_n in self.player.location.items:
-                self.game_screen.output_display.apply_tag_to_pattern(i_n.name, 'salmon')
+        elif color_code == 'narrator':
+            self.game_screen.output_display.apply_tag_to_pattern(text, 'light-lavender')
 
         if command_readback:
             self.game_screen.output_display.display_text('\n')
-
         else:
             self.game_screen.output_display.display_text('\n>')
 

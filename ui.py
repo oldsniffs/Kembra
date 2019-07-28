@@ -38,6 +38,8 @@ class OutputText(tk.Text):
 
         # ---- Tags ----
 
+        self.tag_configure('location_dsc', foreground='white', background='#2E3A22')
+
         self.tag_configure('red', foreground='#ff0000')
         self.tag_configure('orange-red', foreground='#FF4500')
         self.tag_configure('dark-turquoise', foreground='#2C7B80')

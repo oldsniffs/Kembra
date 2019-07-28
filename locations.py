@@ -84,9 +84,9 @@ class World:
 		pass
 
 class Zone:
-	def __init__(self, xyz, zone_type, name, description):
+	def __init__(self, xyz, type, name, description):
 		self.xyz = xyz
-		self.zone_type = zone_type
+		self.type = type
 		self.name = name
 		self.description = description
 		self.map = {} # Key is (x,y) tuple, value is Location object
@@ -134,92 +134,99 @@ class Location:
 		capitalized_exits = []
 		for e in self.get_exits():
 			capitalized_exits.append(e.capitalize())
-		return capitalized_exits
+		return ', '.join(capitalized_exits)
 
-	# This method can be reused to list items in any inventory style list
-	def describe(self):
 
-		items_description = ''
+	def describe(self, observer=None):
 
-		if len(self.items)==1:
-			items_description = '\nThere is a ' + self.items[0].name + ' here.'
-		elif len(self.items) > 1: 
-			items_description = '\nThere are '
+		description = f'TITLE{self.zone.type}, {self.zone.name}: {self.name}||{self.physical_description}'
 
-			# Sorts items into stacks, grouped, and single
-			single_items = []
-			grouped_items = {}
-			checked_list = []
-			for i in self.items:
-				if i.name in checked_list:
-					continue
-				if i.grouping == 'normal':
-					count = 1
-					for i_duplicate in self.items:
-						if i_duplicate != i and i.name == i_duplicate.name:
-							count += 1
-							checked_list.append(i.name)
+		# This algorithm (when complete) can be reused to list items in any inventory style list
+		if len(self.items) > 0:
+			items_description = ''
+			if len(self.items) == 1:
+				items_description = '\nThere is a ' + self.items[0].name + ' here.'
+			elif len(self.items) > 1:
+				items_description = '\nThere are '
 
-					if count == 1:
+				# Sorts items into stacks, grouped, and single
+				single_items = []
+				grouped_items = {}
+				checked_list = []
+				for i in self.items:
+					if i.name in checked_list:
+						continue
+					if i.grouping == 'normal':
+						count = 1
+						for i_duplicate in self.items:
+							if i_duplicate != i and i.name == i_duplicate.name:
+								count += 1
+								checked_list.append(i.name)
+
+						if count == 1:
+							single_items.append(i)
+						if count > 1:
+							grouped_items[i.plural_name] = count
+
+					elif i.grouping == 'stack':
 						single_items.append(i)
-					if count > 1:
-						grouped_items[i.plural_name] = count
 
-				elif i.grouping == 'stack':
-					single_items.append(i)
-
-				else:
-					single_items.append(i)
-
-			grouped_count = len(grouped_items)
-			single_count = len(single_items)
-
-			for i, q in grouped_items.items():
-				if grouped_count == 1 and single_count == 1: # If there were only 2 item listings, no comma needed
-					items_description = items_description + str(q) + ' ' + i + ' '
-				elif grouped_count > 1 or single_count != 0:
-					items_description = items_description + str(q) + ' ' + i+', '
-				else:
-					items_description = items_description + 'and '+count+' '+i+' here.'
-				grouped_count -= 1
-				
-			for i in single_items:
-				if single_count == 2 and len(self.items) == 2: # If there were only 2 item listings, no comma needed
-					if i.grouping == 'stack':
-						items_description = items_description + 'a ' +i.stack_name+' of '+i.plural_name+' '
 					else:
-						items_description = items_description + 'a ' + i.name + ' '
-				if single_count > 1:
-					if i.grouping == 'stack':
-						items_description = items_description + 'a '+i.stack_name+' of '+i.plural_name+', '
+						single_items.append(i)
+
+				grouped_count = len(grouped_items)
+				single_count = len(single_items)
+
+				for i, q in grouped_items.items():
+					if grouped_count == 1 and single_count == 1: # If there were only 2 item listings, no comma needed
+						items_description = items_description + str(q) + ' ' + i + ' '
+					elif grouped_count > 1 or single_count != 0:
+						items_description = items_description + str(q) + ' ' + i+', '
 					else:
-						items_description = items_description + 'a ' + i.name + ', '
-				else:
-					if i.grouping == 'stack':
-						items_description = items_description+'and a '+i.stack_name+' of '+str(i.quantity)+' '+i.plural_name+' here.'
+						items_description = items_description + 'and '+count+' '+i+' here.'
+					grouped_count -= 1
+
+				for i in single_items:
+					if single_count == 2 and len(self.items) == 2: # If there were only 2 item listings, no comma needed
+						if i.grouping == 'stack':
+							items_description = items_description + 'a ' +i.stack_name+' of '+i.plural_name+' '
+						else:
+							items_description = items_description + 'a ' + i.name + ' '
+					if single_count > 1:
+						if i.grouping == 'stack':
+							items_description = items_description + 'a '+i.stack_name+' of '+i.plural_name+', '
+						else:
+							items_description = items_description + 'a ' + i.name + ', '
 					else:
-						items_description = items_description + 'and a ' + i.name+' here.'
-				single_count -= 1
+						if i.grouping == 'stack':
+							items_description = items_description+'and a '+i.stack_name+' of '+str(i.quantity)+' '+i.plural_name+' here.'
+						else:
+							items_description = items_description + 'and a ' + i.name+' here.'
+					single_count -= 1
+
+			description = description + f'||ITEMS{items_description}'
 
 		denizens_description = ''
 		for denizen in self.denizens:
-			print(denizen.name)
-			denizens_description = denizens_description + denizen.name
+			if denizen != observer:
+				denizens_description = denizens_description + denizen.name
+		if denizens_description:
+			description = description + f'||DENZS{denizens_description}'
 
-		best_description = self.zone.name + ', ' + self.name + ': ' + self.physical_description  + items_description +'\nAvailable exits: ' + ', '.join(self.capitalize_exits()) + '.' + f'\n' + denizens_description
-
-		return best_description
+		return description
 
 
 class special_exit:
 	def __init__(self):
 		pass
 
+
 class Building:
 	def __init__(self):
 		self.name = ''
 		self.size = 0
 		self.rooms = {}
+
 
 class Room: # Possible inheritance from Location
 	def __init__(self):
