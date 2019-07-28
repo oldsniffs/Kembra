@@ -109,7 +109,7 @@ class Client(tk.Tk):
 
         self.send_message(login_name)
 
-        kill_color_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
+        absorb_color_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         response_header = self.socket.recv(HEADER_LENGTH).decode('utf-8')
         if not len(response_header):
             return False
@@ -250,17 +250,10 @@ class Client(tk.Tk):
     def display_text_output(self, text, pattern1=None, tag1=None, pattern2=None, tag2=None, command_readback=False,
                             color_code='default'):
 
-        # TODO: Add new line to the end so new ">" won't be colored
-        if command_readback:
-            text = text + '\n'
-
-        else:
-            text = text + '\n> '
-
         self.game_screen.output_display.display_text(text)
 
         if color_code == 'speech':
-            self.game_screen.output_display.apply_tag_to_pattern(text, 'dark-turquoise')
+            self.game_screen.output_display.apply_tag_to_pattern(text, 'light-turquoise')
 
         elif color_code == 'future default':
 
@@ -271,6 +264,12 @@ class Client(tk.Tk):
                 self.game_screen.output_display.apply_tag_to_pattern(e, 'dark-turquoise')
             for i_n in self.player.location.items:
                 self.game_screen.output_display.apply_tag_to_pattern(i_n.name, 'salmon')
+
+        if command_readback:
+            self.game_screen.output_display.display_text('\n')
+
+        else:
+            self.game_screen.output_display.display_text('\n>')
 
 if __name__ == "__main__":
     client = Client()

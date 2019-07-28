@@ -137,7 +137,7 @@ class Location:
 		return capitalized_exits
 
 	# This method can be reused to list items in any inventory style list
-	def describe(self, target=None): 
+	def describe(self):
 
 		items_description = ''
 
