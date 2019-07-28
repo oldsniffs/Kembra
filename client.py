@@ -13,6 +13,8 @@ TODO: Special text reading system, to break large strings into multiple display_
 
 TODO: Get listen to broadcasts to end smoothly
 
+TODO: Serializing of color codes, to allow user to set and save client text color preferences
+
 ISSUES
 
 """
@@ -32,6 +34,8 @@ PORT = 1234
 TIMEOUT = 3
 
 BOUND_KEYS = ['<Return>']
+
+FCODES = {'TITLE': 'location_dsc', 'PHYSD': 'default', 'ITEMS': 'items_dsc', 'DENZS': 'denizens_dsc', 'EXITS': 'exits_dsc'}
 
 
 class Client(tk.Tk):
@@ -136,7 +140,7 @@ class Client(tk.Tk):
                     return
                 broadcast_length = int(broadcast_header.decode('utf-8'))
                 broadcast = self.socket.recv(broadcast_length).decode('utf-8')
-
+                print(broadcast)
                 self.display_text_output(broadcast)
             except RuntimeError as e:
                 print(f'RuntimeError: {e}. Goodbye!')
@@ -242,17 +246,31 @@ class Client(tk.Tk):
     def display_text_output(self, text, pattern1=None, tag1=None, pattern2=None, tag2=None, command_readback=False,
                             color_code='default'):
 
-        self.game_screen.output_display.display_text(text)
+        # It should not be hard to detect wrappers around specific spans of the packet string to be colored.
 
-        if color_code == 'speech':
-            self.game_screen.output_display.apply_tag_to_pattern(text, 'light-turquoise')
-        elif color_code == 'narrator':
-            self.game_screen.output_display.apply_tag_to_pattern(text, 'light-lavender')
+        if '||' in text:
+            ftexts = text.split('||')
+            del ftexts[0]
+            print(ftexts)
+            for ft in ftexts:
+                fcode = ft[:5]  # Relates to the constant dict FCODES, to assign color code
+                ftext = ft[5:]
+                self.game_screen.output_display.display_text(f'{ftext}\n')
+                self.game_screen.output_display.apply_tag_to_pattern(ftext, FCODES[fcode])
 
-        if command_readback:
-            self.game_screen.output_display.display_text('\n')
         else:
-            self.game_screen.output_display.display_text('\n>')
+            self.game_screen.output_display.display_text(text)
+            if color_code == 'speech':
+                self.game_screen.output_display.apply_tag_to_pattern(text, 'light-turquoise')
+            elif color_code == 'narrator':
+                self.game_screen.output_display.apply_tag_to_pattern(text, 'light-lavender')
+
+            if command_readback:
+                self.game_screen.output_display.display_text('\n')
+            else:
+                self.game_screen.output_display.display_text('\n>')
+
+
 
 if __name__ == "__main__":
     client = Client()

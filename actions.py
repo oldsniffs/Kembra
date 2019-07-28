@@ -61,6 +61,7 @@ def execute_player_action(player_action):
 
 	if player_action.verb == 'look':
 		response = player_action.subject.location.describe(observer=player_action.subject)
+		print(response)
 
 	if player_action.verb == 'go':
 		print('Executing "go"')

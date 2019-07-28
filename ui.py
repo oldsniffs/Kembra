@@ -38,7 +38,12 @@ class OutputText(tk.Text):
 
         # ---- Tags ----
 
-        self.tag_configure('location_dsc', foreground='white', background='#2E3A22')
+        self.tag_configure('default', foreground='#FFFFFF')
+
+        self.tag_configure('location_dsc', foreground='#FFFFFF', background='#2E3A22')
+        self.tag_configure('items_dsc', foreground='#D76565')
+        self.tag_configure('denizens_dsc', foreground='#939FAB')
+        self.tag_configure('exits_dsc', foreground='#CCCCFF')
 
         self.tag_configure('red', foreground='#ff0000')
         self.tag_configure('orange-red', foreground='#FF4500')

@@ -66,7 +66,6 @@ class World:
 
 				self.map[new_zone_xy].map[new_location_xyz] = Location(new_location_xyz, new_location_zone, new_location_name, new_location_physical_description, new_location_harvestables, new_location_interactables, new_location_items)
 
-
 	def place_item(self, item_dict):
 		new_item_dict = item_dict # This copy might not be needed
 
@@ -136,10 +135,9 @@ class Location:
 			capitalized_exits.append(e.capitalize())
 		return ', '.join(capitalized_exits)
 
-
 	def describe(self, observer=None):
 
-		description = f'TITLE{self.zone.type}, {self.zone.name}: {self.name}||{self.physical_description}'
+		description = f'||TITLE{self.zone.type}, {self.zone.name}: {self.name}||PHYSD{self.physical_description}'
 
 		# This algorithm (when complete) can be reused to list items in any inventory style list
 		if len(self.items) > 0:
@@ -206,12 +204,17 @@ class Location:
 
 			description = description + f'||ITEMS{items_description}'
 
-		denizens_description = ''
-		for denizen in self.denizens:
-			if denizen != observer:
-				denizens_description = denizens_description + denizen.name
-		if denizens_description:
+		other_denizens = self.denizens
+		other_denizens.remove(observer)
+		if other_denizens:
+			denizens_description = 'Others Present:'
+
+			for denizen in other_denizens:
+				denizens_description = denizens_description + f' {denizen.name}'
+
 			description = description + f'||DENZS{denizens_description}'
+
+		description = description + f'||EXITSAvailable Exits: {self.capitalize_exits()}'
 
 		return description
 
