@@ -20,6 +20,10 @@ necessary.
 Listens for commands from clients, returns a message regarding the command if needed.
 
 Question of using a Client class: Operations will be more granular with a class. But are needs that complex? 
+
+Select Usage:
+As of now, all outgoing response and observation messages are handled within the readables part of select,
+forgoing the use of writables. With more clients connected, using writables might keep socket operations from tripping.
 """
 
 HEADER_LENGTH = 10
@@ -61,6 +65,7 @@ def receive_message(client_socket):
 
 	except ConnectionResetError as e:
 		print(f'ConnectionResetError from {client_socket.getsockname()}: {e}')
+		close_client(client_socket)
 		return None, None
 
 
@@ -96,24 +101,15 @@ def run_server(world):
 				if sock not in active_players:
 					login_name = data
 					if not login_name:
-						print(f'(From Readables) Lost connection from {sock.getsockname()}.')
-						# TODO: When up and running, try using close method here
-						# TODO: Is following code needed?
-						if sock in actionable_sockets:
-							actionable_sockets.remove(sock)
-						if sock in active_players:
-							del active_players[sock]
-						sockets.remove(sock)
-						del message_queues[sock]
-						del command_queues[sock]
-						sock.close()
+						print(f'(From Readables) Lost connection from {sock.getsockname()} during login attempt.')
+						close_client(sock)
 
 					if login_name in [player.name for player in world.players]:
 						for player in world.players:
 							if login_name == player.name:
 								active_players[sock] = player
 								print(f'{sock.getsockname} logged in as {active_players[sock].name}')
-								broadcast(sock, f'Logged in as {active_players[sock].name}.')
+								broadcast(sock, f'Logged in as {active_players[sock].name}. Welcome back.')
 					else:
 						active_players[sock] = people.Player(world, login_name)
 						print(f'New player {login_name} created by {sock.getsockname()}')
@@ -150,12 +146,7 @@ def run_server(world):
 
 		for sock in exceptionals:
 			print(f'(From exceptionals list) Lost connection from {sock.getsockname()}.')
-			if sock in actionable_sockets:
-				actionable_sockets.remove(sock)
-			sock.close()
-			sockets.remove(sock)
-			del message_queues[sock]
-			del command_queues[sock]
+			close_client(sock)
 
 
 def close_client(sock):

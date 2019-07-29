@@ -7,6 +7,7 @@ import queue
 
 # TODO: Can the following code be moved into World.load_map ?
 # TODO: Different exit generation for outdoors (open) vs indoors?
+# TODO: Clean denizens description
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 locations_xml = os.path.join(base_path, 'data\\locations.xml')
@@ -96,7 +97,6 @@ class Location:
 		self.xyz = xyz
 		self.zone = zone
 		self.name = name
-		# Denizens also have a current_location attribue so they know where they are
 		self.denizens = []
 		self.physical_description = physical_description
 		self.harvestables = harvestables
@@ -204,17 +204,19 @@ class Location:
 
 			description = description + f'||ITEMS{items_description}'
 
-		other_denizens = self.denizens
-		other_denizens.remove(observer)
-		if other_denizens:
-			denizens_description = 'Others Present:'
-
-			for denizen in other_denizens:
+		denizens_description = ''
+		for denizen in self.denizens:
+			print(denizen)
+			if denizen == observer:
+				continue
+			if denizen is not None:
 				denizens_description = denizens_description + f' {denizen.name}'
 
-			description = description + f'||DENZS{denizens_description}'
+		if denizens_description:
+			description = description + f'||DENZSOthers present:{denizens_description}'
 
 		description = description + f'||EXITSAvailable Exits: {self.capitalize_exits()}'
+		self.denizens.append(observer)
 
 		return description
 
@@ -244,4 +246,5 @@ if __name__ == '__main__':
 	world=World()
 	for l in world.map[(10,10)].map:
 		print(l)
-	print(world.map[(10,10)].map[(5,5,0)].describe())
+	print(world.map[(10,10)].map[(1,5,7)].describe())
+	print(world.map[(10,10)].map[(1,4,7)].denizens)

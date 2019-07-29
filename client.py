@@ -140,7 +140,6 @@ class Client(tk.Tk):
                     return
                 broadcast_length = int(broadcast_header.decode('utf-8'))
                 broadcast = self.socket.recv(broadcast_length).decode('utf-8')
-                print(broadcast)
                 self.display_text_output(broadcast)
             except RuntimeError as e:
                 print(f'RuntimeError: {e}. Goodbye!')
@@ -255,6 +254,8 @@ class Client(tk.Tk):
             for ft in ftexts:
                 fcode = ft[:5]  # Relates to the constant dict FCODES, to assign color code
                 ftext = ft[5:]
+                if fcode == "TITLE":
+                    ftext = f'{ftext:<{100}}'
                 self.game_screen.output_display.display_text(f'{ftext}\n')
                 self.game_screen.output_display.apply_tag_to_pattern(ftext, FCODES[fcode])
 
@@ -269,7 +270,6 @@ class Client(tk.Tk):
                 self.game_screen.output_display.display_text('\n')
             else:
                 self.game_screen.output_display.display_text('\n>')
-
 
 
 if __name__ == "__main__":
