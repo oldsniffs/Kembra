@@ -165,7 +165,11 @@ class Client(tk.Tk):
             self.display_text_output('Please enter something.')
             return None
 
-        if words[0] in actions.verb_list:
+        if words[0] in actions.verb_list: # this could be a function called here
+            if len(words) == 1 and words[0] in ['n', 'north', 'e', 'east', 'w', 'west', 's', 'south']:
+                words.append(words[0])
+                words[0] = 'go'
+
             self.send_message(f'{words[0]:<{VERB_HEADER_LENGTH}}'+' '.join(words[1:]), code='01')
 
         else:

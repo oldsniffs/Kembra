@@ -1,10 +1,14 @@
+"""
+TODO: Checks for whether a target has been given by user should be done in client, and not sent without one.
+"""
+
 # Home of action_command shit, including verb lists, and parse and execute functions
 
 
 system_commands = ['main menu', 'pause', 'quit']
 player_only_verbs = ['i', 'inv', 'inventory', 'friends']
 world_verbs = ['look', 'go', 'n', 'north', 'e', 'east', 'w', 'west', 's', 'south']
-subject_verbs = ['eat', ' drink']  # Subject acts on self
+subject_verbs = ['eat', 'drink']  # Subject acts on self
 social_verbs = ['talk', 'shop', 'buy', 'sell', 'give']  # Involves other people
 item_verbs = ['get', 'take', 'drop']
 verb_list = world_verbs + subject_verbs + social_verbs + item_verbs + player_only_verbs
@@ -64,9 +68,7 @@ def execute_player_action(player_action):
         print(response)
 
     if player_action.verb == 'go':
-        print('Executing "go"')
         if not player_action.target:
-            print('returning where do you want to go')
             response = 'Where do you want to go?'
 
         elif player_action.target in ['n', 'e', 'w', 's', 'north', 'east', 'west', 'south']:
@@ -93,5 +95,22 @@ def execute_player_action(player_action):
 
         else:
             response = 'I don\'t understand where you\'re trying to go.'
+
+    if player_action.verb == 'get':
+
+        if not player_action.target:
+            response = 'What do you want to get?'
+
+        else:
+            for i in player_action.subject.location.items:
+                if i.name == player_action.target:
+                    player_action.subject.location.items.remove(i)
+                    player_action.subject.inventory.append(i)
+                    # TODO: As of now it picks up 1st match and stops.
+                    #  Could pick up all, prompt user to pick up all, or user can enter pick up all items
+                    break
+
+        response = f'You get the {player_action.target.name}'
+        observation = f'{player_action.subject.name} picks up {player_action.target.name}'
 
     return response, observation
