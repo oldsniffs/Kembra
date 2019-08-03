@@ -105,6 +105,8 @@ class Location:
 		self.buildings = []
 		self.special_exits = [] # For special exits where directional movement does not apply
 
+		self.viewables = self.items + self.denizens + self.harvestables + self.interactables + self.special_exits
+
 	def get_exits(self): 
 
 		exits = []
@@ -136,6 +138,7 @@ class Location:
 		return ', '.join(capitalized_exits)
 
 	def describe(self, observer=None):
+		# TODO: Maybe rename this as look as it provides live updated info.
 
 		description = f'||TITLE{self.zone.type}, {self.zone.name}: {self.name}||PHYSD{self.physical_description}'
 
@@ -206,11 +209,9 @@ class Location:
 
 		denizens_description = ''
 		for denizen in self.denizens:
-			print(denizen)
 			if denizen == observer:
 				continue
-			if denizen is not None:
-				denizens_description = denizens_description + f' {denizen.name}'
+			denizens_description = denizens_description + f' {denizen.name}'
 
 		if denizens_description:
 			description = description + f'||DENZSOthers present:{denizens_description}'
@@ -221,7 +222,7 @@ class Location:
 		return description
 
 
-class special_exit:
+class SpecialExit:
 	def __init__(self):
 		pass
 

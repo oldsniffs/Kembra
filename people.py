@@ -89,6 +89,9 @@ class Person():
 	def talk(self):
 		pass
 
+	def look(self):
+		return self.location.describe(observer=self)
+
 	def generate_person(self):
 		if random.randint(0,1) == 0:
 			self.gender = 'female'

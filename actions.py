@@ -64,8 +64,17 @@ def execute_player_action(player_action):
     observation = None
 
     if player_action.verb == 'look':
-        response = player_action.subject.location.describe(observer=player_action.subject)
-        print(response)
+        # TODO: Location items could have a description of where in the room they are.
+        #  If in inventory, this response could include that - "The cremip in your bag ... "
+
+        if not player_action.target:
+            response = player_action.subject.look()
+
+        else:
+            present_viewables = player_action.subject.location.viewables + player_action.subject.inventory
+            for pv in present_viewables:
+                if pv.name == player_action.target:
+                    response = pv.description
 
     if player_action.verb == 'go':
         if not player_action.target:
@@ -83,7 +92,7 @@ def execute_player_action(player_action):
 
             if player_action.target in player_action.subject.location.get_exits():
                 player_action.subject.move(direction=player_action.target)
-                response = player_action.subject.location.describe()
+                response = player_action.subject.look()
                 observation = f'{player_action.subject.name} leaves heading {player_action.target}'
             else:
                 response = 'You can\'t go that way!'
@@ -110,7 +119,7 @@ def execute_player_action(player_action):
                     #  Could pick up all, prompt user to pick up all, or user can enter pick up all items
                     break
 
-        response = f'You get the {player_action.target.name}'
-        observation = f'{player_action.subject.name} picks up {player_action.target.name}'
+        response = f'You get the {player_action.target}'
+        observation = f'{player_action.subject.name} picks up {player_action.target}'
 
     return response, observation
