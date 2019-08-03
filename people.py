@@ -57,6 +57,8 @@ class Person():
 
 		self.world = world
 		self.name = name
+		self.description = self.name
+
 		self.mb = 1
 		all_people.append(self)
 		all_people_names.append(self.name)

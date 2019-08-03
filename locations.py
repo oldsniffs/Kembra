@@ -1,4 +1,4 @@
-# This file includes all map related objects
+# This file contains all map related objects
 
 import people
 import os
@@ -7,7 +7,6 @@ import queue
 
 # TODO: Can the following code be moved into World.load_map ?
 # TODO: Different exit generation for outdoors (open) vs indoors?
-# TODO: Clean denizens description
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 locations_xml = os.path.join(base_path, 'data\\locations.xml')
@@ -105,9 +104,10 @@ class Location:
 		self.buildings = []
 		self.special_exits = [] # For special exits where directional movement does not apply
 
-		self.viewables = self.items + self.denizens + self.harvestables + self.interactables + self.special_exits
+	def get_viewables(self):
+		return self.items + self.denizens + self.harvestables + self.interactables + self.special_exits
 
-	def get_exits(self): 
+	def get_exits(self):
 
 		exits = []
 

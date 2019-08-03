@@ -1,5 +1,6 @@
 """
 TODO: Checks for whether a target has been given by user should be done in client, and not sent without one.
+TODO: Implement reassign_if_move_direction to proper place
 """
 
 # Home of action_command shit, including verb lists, and parse and execute functions
@@ -71,10 +72,18 @@ def execute_player_action(player_action):
             response = player_action.subject.look()
 
         else:
-            present_viewables = player_action.subject.location.viewables + player_action.subject.inventory
+            present_viewables = player_action.subject.location.get_viewables() + player_action.subject.inventory
             for pv in present_viewables:
-                if pv.name == player_action.target:
-                    response = pv.description
+                # Eventually, this try/except shouldn't be needed as all items can be safely assumed to have a name
+                # and description
+                try:
+                    if pv.name.lower() == player_action.target:
+                        response = pv.description
+                        break # Break makes it stops after finding first match.
+                except AttributeError as e:
+                    print(f'{pv} raised error: {e}')
+            if response is None:
+                response = f'{player_action.target} not found here.'
 
     if player_action.verb == 'go':
         if not player_action.target:
