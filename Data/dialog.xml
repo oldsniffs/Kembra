@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<girl gender="f">
-	<I1>
-		<speak pause="True">{sock.player.name}... What did you say? <i>What's your name?</i></speak>
-		<narrator>This time you manage to speak your name.</narrator>
-		<speak pause="True">Ok, that's good, {sock.player.name}. I think you're actually going to be ok.</speak>
-		<acts></acts>
-	</I1>
-</girl>
+<dialog>
+
+    <narrator>
+        <introduction>
+            <p>You are a slave. You were born on the Rinzon Planetation and have spent your [17 year] life in labour to its Dokan.
+            <IF_FARMER>Since your first memory you were forced to toil away in the Kendroot fields, cooking in the vicious heat of the three shifting suns.</IF_FARMER>
+            <IF_MINER>Since your first memory you have toiled away in the Rinzon mines. Tunneling deep into the planet core, you thieved away its very heart and burned in its angry heat.</IF_MINER>
+                Vicious beatings and deprivations were routinely administered to enforce discipline by the guards, real and robotic. You avoided this pain by being quiet and obedient, and never attracting attention to yourself. For reasons you never understood, most of your fellow enslaved were always fighting back against the guards, raging in futility for no other purpose than to bring ever more pain down upon themselves.</p>
+            <p>[Two years] ago, maybe because you caused so little trouble, you were "entrusted" to do more important tasks. Eventually, you were even taught to fly an old cargo vessel and sent about on supply runs around the cluster. If your depot's surplus salvage was needed elsewhere in a pinch, or the automated shipping fleet computer had malfunctioned, you'd be sent out to fill the gaps. This was a job they had to use actual human slaves for, as the robots and system ais were unable to interface with the cargo ship's Kainat Era technology. Most of the robotic hangar units were afraid to even get too near the old ships.</p>
+            <p>Soon you were removed entirely from slagheap duty and began spending all of your time flying cargo runs. Your overseer would also send you on tasks for other depots in the cluster. You occasionally managed to speak with hangar slaves on these stops, and more rarely with other slaves flying cargo supply runs like you. You learned that a small cadre of such "pilots" were in service, operating a salvaged old fleet of Kainat Era utility ships. It also began to seem as if the guards- real and robotic, were giving you a wider space. When you decided to start sleeping on "your" ship full time, they made no objection.</p>
+            <p>Today, returning to the hangar from a week-long trip, a commotion was underway around the command box. The hangar slaves told you that a series of explosions had collapsed many of the mine's deepest tunnels. Tens of thousands of slaves died and the great bored mines lost, but that an important discovery had also been made. Now the slaves were being ordered immediately back down to rebuild, and, believing it wildly unsafe, and that their souls may be dragged down forever by the raging planet, were breaking out in rebellion against the guards. Quickly upon your arrival, a messenger robot flies up and tells you to report to your Deputy Overseer, immediately.</p>
+        </introduction>
+    </narrator>
+
+    <deputy_overseer>
+
+    </deputy_overseer>
+
+    <anjol>
+        <introduction>
+            <p>I'm Anjol</p>
+        </introduction>
+        <QST_ESCAPE1>
+            <p></p>
+        </QST_ESCAPE1>
+    </anjol>
+
+
+<kembra>
+    <mam>
+        
+    </mam>
+</kembra>
+
+</dialog>

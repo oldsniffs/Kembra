@@ -66,7 +66,7 @@ class Person():
 		# if location == 'default':
 		# 	self.location =  self.faction.home
 		self.daily_calories = 0
-		self.personal_xyz = list(self.location.xyz)
+		self.personal_xyz = self.get_personal_xyz()
 		# self.vocation = vocation # Vocation class
 		# self.skills = skills # Skill dict
 		# self.attributes = attributes # Attribute dict
@@ -84,6 +84,9 @@ class Person():
 			self.randomize_person()
 		# else:
 		# 	self.readin_person()
+
+	def get_personal_xyz(self):
+		return list(self.location.xyz)
 
 	def get_valid_targets(self): # Called by substantiate_command to convert command.target strings to objects
 		return self.location.items+self.location.denizens+self.inventory
@@ -140,29 +143,43 @@ class Person():
 		pass
 
 	def move(self, direction=None, exit=None):
+		# Still open question of directional movement into new zone
 
-		if exit != None:
+		if exit:
 			self.location = exit.destination
 
-		# Directional move action will need if statement in case a new zone is entered
-		elif direction != None:
+		elif direction:
+			old_xyz = self.copy_xyz_list(self.personal_xyz)
+			new_xyz = self.copy_xyz_list(self.personal_xyz)
 			if direction == 'north':
-				self.personal_xyz[1] += 1
+				new_xyz[1] += 1
 			if direction == 'east':
-				self.personal_xyz[0] += 1
+				new_xyz[0] += 1
 			if direction == 'west':
-				self.personal_xyz[0] -= 1
+				new_xyz[0] -= 1
 			if direction == 'south':
-				self.personal_xyz[1] -= 1
-			new_xyz = tuple(self.personal_xyz)
-			self.location.denizens.remove(self)
-			self.location = self.location.zone.map[new_xyz]
-			self.location.denizens.append(self)
+				new_xyz[1] -= 1
+
+			self.location.zone.map[tuple(old_xyz)].denizens.remove(self)
+			self.location.zone.map[tuple(new_xyz)].denizens.append(self)
+			self.location = self.location.zone.map[tuple(new_xyz)]
+			self.personal_xyz = self.get_personal_xyz()
+
+
+			# print(f'Denz before leaving: {self.location.denizens}')
+			# print(f'personal: {self.personal_xyz} - new: {self.personal_xyz}')
+			# self.location.denizens.remove(self)
+			# print(f'Denz with self supposedly removed: {self.location.denizens}')
+			# self.location = self.location.zone.map[new_xyz]
+			# self.location.denizens.append(self)
 
 	def say(self, speech):
 		self.world.world_events
 
 	# ---- Support methods ----
+
+	def copy_xyz_list(self, xyz):
+		return list(tuple(xyz))
 
 	def add_to_denizens(self):
 		self.locations.denizens.append(self)
