@@ -157,7 +157,7 @@ class Person():
 
 			self.location.denizens.remove(self)
 			self.location = self.location.zone.map[tuple(new_xyz)]
-			# self.location.denizens.append(self)
+			self.location.denizens.append(self)
 
 	def say(self, speech):
 		self.world.world_events
