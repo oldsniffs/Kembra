@@ -217,7 +217,6 @@ class Location:
 			description = description + f'||DENZSOthers present:{denizens_description}'
 
 		description = description + f'||EXITSAvailable Exits: {self.capitalize_exits()}'
-		self.denizens.append(observer)
 
 		return description
 
