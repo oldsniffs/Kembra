@@ -47,12 +47,12 @@ def random_mb():
 	mb = 1
 	return mb
 
-# What they spend their time doing. Might only want 1 per person
+# What they spend their time doing. Might only want 1 per Human
 class Vocation():
 	def __init__(self):
 		self.name = ''
 
-class Person():
+class Human():
 	def __init__(self, world, name): # vocation, skills, attributes): #
 
 		self.world = world
@@ -244,7 +244,7 @@ class Person():
 		return state
 
 
-class Player(Person):
+class Player(Human):
 	def __init__(self, world, name):
 		super().__init__(world, name)
 		self.inventory = [items.Stanget()]
@@ -255,6 +255,9 @@ class Player(Person):
 
 	def generate_player(self):
 		pass
+
+
+class
 
 # ---- if __name__ == '__main__' ----
 

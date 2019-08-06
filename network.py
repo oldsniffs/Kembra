@@ -22,7 +22,7 @@ Listens for commands from clients, returns a message regarding the command if ne
 Question of using a Client class: Operations will be more granular with a class. But are needs that complex? 
 
 Select Usage:
-As of now, all outgoing response and observation messages are handled within the readables part of select,
+As of now, all outgoing response and observation messages are handled within the readable part of select,
 forgoing the use of writables. With more clients connected, using writables might keep socket operations from tripping.
 """
 
@@ -39,10 +39,9 @@ server.bind((server_address, port))
 server.listen(5)
 
 sockets = [server]
-actionable_sockets = []
-active_players = {}  # {client: player}
-message_queues = {}
-command_queues = {}
+active_players = {}  # {client socket: player}
+broadcasting = [] # sockets with outstanding broadcasts in queue
+broadcast_queues = {} # {socket: Queue} outgoing broadcasts stored in Queue
 online_player_locations = []
 
 world_events = []
@@ -78,17 +77,16 @@ def broadcast(client_socket, message):
 def run_server(world):
 	print('Server online: Accepting connections...')
 	while True:
-		readables, actionables, exceptionals = select.select(sockets, actionable_sockets, sockets)
+		readable, writable, exceptional = select.select(sockets, broadcasting, sockets)
 
-		for sock in readables:
+		for sock in readable:
 			if sock == server:
 
 				new_client, client_address = server.accept()
 				new_client.setblocking(False)
 				print(f'Connection from {client_address[0]}:{client_address[1]} established')
 				sockets.append(new_client)
-				message_queues[new_client] = queue.Queue()
-				command_queues[new_client] = queue.Queue()
+				broadcast_queues[new_client] = queue.Queue()
 
 			elif sock in sockets:
 				try:
@@ -101,7 +99,7 @@ def run_server(world):
 				if sock not in active_players:
 					login_name = data
 					if not login_name:
-						print(f'(From Readables) Lost connection from {sock.getsockname()} during login attempt.')
+						print(f'(From Readable) Lost connection from {sock.getsockname()} during login attempt.')
 						close_client(sock)
 
 					if login_name in [player.name for player in world.players]:
@@ -144,18 +142,23 @@ def run_server(world):
 								if active_players[s].location == active_players[sock].location:
 									broadcast(s, f'{active_players[sock].name} yells, "{data[1:]}!"')
 
-		for sock in exceptionals:
-			print(f'(From exceptionals list) Lost connection from {sock.getsockname()}.')
+		for sock in writable:
+			try:
+				message = broadcast_queues[sock].get_nowait()
+			except:
+				pass
+
+		for sock in exceptional:
+			print(f'(From exceptional list) Lost connection from {sock.getsockname()}.')
 			close_client(sock)
 
 
 def close_client(sock):
 	print(f'Lost connection from {sock.getsockname()}.')
-	if sock in actionable_sockets:
-		actionable_sockets.remove(sock)
+	if sock in broadcasting:
+		broadcasting.remove(sock)
 	if sock in active_players:
 		del active_players[sock]
 	sockets.remove(sock)
-	del message_queues[sock]
-	del command_queues[sock]
+	del broadcast_queues[sock]
 	sock.close()
