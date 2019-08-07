@@ -3,9 +3,6 @@ import random
 
 # TODO: Cartography skill lets you make maps from your explorations.
 
-all_people = []
-all_people_names = []
-
 mb_male_weights = {
 	'istj': 164,
 	'estj': 112,
@@ -47,74 +44,44 @@ def random_mb():
 	mb = 1
 	return mb
 
-# What they spend their time doing. Might only want 1 per Human
+# What they spend their time doing. Might only want 1 per CarbonLife
 class Vocation():
 	def __init__(self):
 		self.name = ''
 
-class Human():
+
+class CarbonLife(): # Could inherit CarbonLife
 	def __init__(self, world, name): # vocation, skills, attributes): #
 
 		self.world = world
 		self.name = name
 		self.description = self.name
 
-		self.mb = 1
-		all_people.append(self)
-		all_people_names.append(self.name)
+		# Behavior
+		self.active = False
+		self.behavior_state = None
+
+		self.relationships = {} # target: number/string rank
+
 		self.location = self.world.map[(10,10)].map[(1,5,7)]
-		# if location == 'default':
-		# 	self.location =  self.faction.home
-		self.daily_calories = 0
-		# self.vocation = vocation # Vocation class
-		# self.skills = skills # Skill dict
-		# self.attributes = attributes # Attribute dict
 
 		self.inventory = []
-
-		self.location.denizens.append(self)
 
 		# Biometrics
 		self.gender = ''
 		self.height = 0
 		self.weight = 0 # weight formula tbd
 
-		if name == 'random':
-			self.randomize_person()
-		# else:
-		# 	self.readin_person()
+		self.add_to_world()
 
-	def get_valid_targets(self): # Called by substantiate_command to convert command.target strings to objects
-		return self.location.items+self.location.denizens+self.inventory
-
-	def talk(self):
-		pass
-
-	def look(self):
-		return self.location.describe(observer=self)
-
-	def generate_person(self):
-		if random.randint(0,1) == 0:
-			self.gender = 'female'
-		else:
-			self.gender = 'male'
-
-		if self.gender == 'female':
-			self.weight = 120
-			self.height = 60
-		else:
-			self.weight = 180
-			self.height = 72
+	def add_to_world(self):
+		self.world.all_people_names.append(self.name)
+		self.location.denizens.append(self)
+		self.world.ai_population.append(self)
 
 	def describe(self):
 		pass
 		# Height, weight, etc adjectives based on biometric values. Clothes as well?
-
-	def absorb_calories(self):
-		# daily_caloric_needs formula to be designed later. 2000 default for now
-		daily_caloric_needs = 2000
-		calorie_balance = ''
-		weight_change = calorie_balance/9
 
 # ---- Actions ----
 
@@ -134,9 +101,6 @@ class Human():
 		else:
 			self.inventory.append(item)
 			target.items.remove(item)
-
-	def eat(self, food):
-		pass
 
 	def move(self, direction=None, exit=None):
 		# Still open question of directional movement into new zone
@@ -166,9 +130,6 @@ class Human():
 
 	def copy_xyz_list(self, xyz):
 		return list(tuple(xyz))
-
-	def add_to_denizens(self):
-		self.locations.denizens.append(self)
 
 	def get_inventory(self): # Check through bags
 
@@ -244,10 +205,15 @@ class Human():
 		return state
 
 
-class Player(Human):
+class Player(CarbonLife):
 	def __init__(self, world, name):
 		super().__init__(world, name)
 		self.inventory = [items.Stanget()]
+
+	def add_to_world(self):
+		self.world.players.append(self)
+		self.world.all_people_names.append(self.name)
+		self.location.denizens.append(self)
 
 	def show_location(self):
 		current_location = 'You are at ' + self.location.zone.name + ', ' + self.location.name + '.'
@@ -256,8 +222,37 @@ class Player(Human):
 	def generate_player(self):
 		pass
 
+	def look(self):
+		return self.location.describe(observer=self)
 
-class
+
+class AI(CarbonLife):
+	def __init__(self, world, name):
+		super().__init__(world, name)
+
+		# Personal Background
+		self.mb = None
+		self.vocation = None
+
+		self.current_action = None
+		self.action_timer = self.get_action_timer()
+
+	def determine_behavior(self):
+		needs = self.check_needs
+
+	def check_needs(self):
+		# Check hunger, thirst, sleep, urgent necessities
+		pass
+
+	def meet_n_greet(self):
+		for d in self.location.denizens:
+			if d not in self.relationships.keys():
+				pass
+
+
+
+class Animal(CarbonLife):
+	pass
 
 # ---- if __name__ == '__main__' ----
 

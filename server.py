@@ -80,5 +80,22 @@ class Menu(tk.Frame):
             self.save_button.config(stat='disabled')
 
 
-server_thread = threading.Thread(target=network.run_server, name='server thread', args=(locations.World(),))
-server_thread.start()
+def run_world(world):
+    for ai in world.ai_population:
+        if not ai.busy:
+            ai.determine_behavior()
+
+        else:
+            continue
+
+
+class Server:
+    def __init__(self):
+        self.world = locations.World()
+        self.server_thread = threading.Thread(target=network.run_server, name='server thread', args=(self.world,))
+        self.world_thread = threading.Thread(target=run_world, name='run world thread', args=(self.world,))
+
+
+server = Server()
+server.world_thread.start()
+server.server_thread.start()

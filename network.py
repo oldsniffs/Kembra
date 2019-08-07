@@ -33,7 +33,7 @@ HEADER_AND_CODE = HEADER_LENGTH + 2
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server_address = '10.0.0.43'
+server_address = '10.0.0.230'
 port = 1234
 server.bind((server_address, port))
 server.listen(5)
