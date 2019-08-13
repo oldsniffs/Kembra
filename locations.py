@@ -14,8 +14,10 @@ locations_tree = et.parse(locations_xml)
 
 world_tree = locations_tree.getroot()
 
+
 class World:
 	def __init__(self):
+		self.server = None # gets assigned to active server when world is created or loaded
 		self.map = {}
 		self.load_map()
 

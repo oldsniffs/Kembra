@@ -145,6 +145,26 @@ class Client(tk.Tk):
                 print(f'RuntimeError: {e}. Goodbye!')
                 return
 
+    # def parse_player_action(player, verb, words):
+    #
+    #     player_action = ActionCommand()
+    #
+    #     player_action.subject = player
+    #     player_action.verb = verb
+    #
+    #     # strip() in case value is blank space. may not be necessary
+    #     words = words.split()
+    #
+    #     # I would check action instead of words, but unsure about blank space.
+    #     if not words:
+    #         return player_action
+    #
+    #     if len(words) == 1:
+    #         print(f'assigning {words[0]} as target')
+    #         player_action.target = words[0]
+    #
+    #     return player_action
+
     def process_action(self, event):
         player_input = self.get_player_input()
         self.display_text_output(player_input, command_readback=True)

@@ -31,134 +31,143 @@ VERB_HEADER_LENGTH = 10
 CODE_LENGTH = 2
 HEADER_AND_CODE = HEADER_LENGTH + 2
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 server_address = '10.0.0.230'
 port = 1234
-server.bind((server_address, port))
-server.listen(5)
-
-sockets = [server]
-active_players = {}  # {client socket: player}
-broadcasting = [] # sockets with outstanding broadcasts in queue
-broadcast_queues = {} # {socket: Queue} outgoing broadcasts stored in Queue
-online_player_locations = []
 
 world_events = []
 
 
-def receive_message(client_socket):
+class Server:
+	def __init__(self):
+		self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-	try:
-		print(client_socket)
-		header = client_socket.recv(HEADER_LENGTH).decode('utf-8')
-		code = client_socket.recv(CODE_LENGTH).decode('utf-8')
+		self.server.bind((server_address, port))
+		self.server.listen(5)
 
-		if not len(header):
-			raise Exception
+		self.sockets = [self.server]
+		self.active_players = {}  # {client socket: player}
+		self.broadcasting = []  # sockets with outstanding broadcasts in queue
+		self.broadcast_queues = {}  # {socket: Queue} outgoing broadcasts stored in Queue
 
-		message_length = int(header)
-		message = client_socket.recv(message_length).decode('utf-8')
+	def receive_message(self, client_socket):
 
-		return code, message
+		try:
+			print(client_socket)
+			header = client_socket.recv(HEADER_LENGTH).decode('utf-8')
+			code = client_socket.recv(CODE_LENGTH).decode('utf-8')
 
-	except ConnectionResetError as e:
-		print(f'ConnectionResetError from {client_socket.getsockname()}: {e}')
-		close_client(client_socket)
-		return None, None
+			if not len(header):
+				raise Exception
 
+			message_length = int(header)
+			message = client_socket.recv(message_length).decode('utf-8')
 
-def broadcast(client_socket, message):
-	broadcast_header = f'{len(message):<{HEADER_LENGTH}}'
-	print(f'Broadcasting to {client_socket.getsockname()}: {broadcast_header} {message}')
-	client_socket.send(broadcast_header.encode('utf-8') + message.encode('utf-8'))
+			return code, message
 
+		except ConnectionResetError as e:
+			print(f'ConnectionResetError from {client_socket.getsockname()}: {e}')
+			self.close_client(client_socket)
+			return None, None
 
-def run_server(world):
-	print('Server online: Accepting connections...')
-	while True:
-		readable, writable, exceptional = select.select(sockets, broadcasting, sockets)
+	def broadcast(self, client_socket, message):
+		broadcast_header = f'{len(message):<{HEADER_LENGTH}}'
+		print(f'Broadcasting to {client_socket.getsockname()}: {broadcast_header} {message}')
+		client_socket.send(broadcast_header.encode('utf-8') + message.encode('utf-8'))
 
-		for sock in readable:
-			if sock == server:
+	def queue_broadcast(self, recipient, message):
+		self.broadcast_queues[recipient.socket].put(message)
+		if recipient.socket not in self.broadcasting:
+			self.broadcasting.append(recipient.socket)
 
-				new_client, client_address = server.accept()
-				new_client.setblocking(False)
-				print(f'Connection from {client_address[0]}:{client_address[1]} established')
-				sockets.append(new_client)
-				broadcast_queues[new_client] = queue.Queue()
+	def run_server(self, world):
+		print('Server online: Accepting connections...')
+		while True:
+			readable, writable, exceptional = select.select(self.sockets, self.broadcasting, self.sockets)
+			# possible renames: readable -> incoming, writable -> outgoing
 
-			elif sock in sockets:
-				try:
-					code, data = receive_message(sock)
-				except Exception as e:
-					print('Exception reached: ', e)
-					close_client(sock)
-					continue
+			for sock in readable:
+				if sock == self.server:
 
-				if sock not in active_players:
-					login_name = data
-					if not login_name:
-						print(f'(From Readable) Lost connection from {sock.getsockname()} during login attempt.')
-						close_client(sock)
+					new_client, client_address = self.server.accept()
+					new_client.setblocking(False)
+					print(f'Connection from {client_address[0]}:{client_address[1]} established')
+					self.sockets.append(new_client)
+					self.broadcast_queues[new_client] = queue.Queue()
 
-					if login_name in [player.name for player in world.players]:
-						for player in world.players:
-							if login_name == player.name:
-								active_players[sock] = player
-								print(f'{sock.getsockname} logged in as {active_players[sock].name}')
-								broadcast(sock, f'Logged in as {active_players[sock].name}. Welcome back.')
+				elif sock in self.sockets:
+					try:
+						code, data = self.receive_message(sock)
+					except Exception as e:
+						print('Exception reached: ', e)
+						self.close_client(sock)
+						continue
+
+					if sock not in self.active_players:
+						login_name = data
+						if not login_name:
+							print(f'(From Readable) Lost connection from {sock.getsockname()} during login attempt.')
+							self.close_client(sock)
+
+						# Logging in
+						if login_name in [player.name for player in world.players]:
+							for player in world.players:
+								if login_name == player.name:
+									player.socket = sock
+									self.active_players[sock] = player
+									print(f'{sock.getsockname} logged in as {self.active_players[sock].name}')
+									self.broadcast(sock, f'Logged in as {self.active_players[sock].name}. Welcome back.')
+						else:
+							self.active_players[sock] = people.Player(world, login_name)
+							self.broadcast_queues[sock] = queue.Queue()
+							self.active_players[sock].server = self
+							self.active_players[sock].socket = sock
+							print(f'New player {login_name} created by {sock.getsockname()}')
+							world.players.append(self.active_players[sock])
+							self.broadcast(sock, f'Welcome to the world, {self.active_players[sock].name}')
+
 					else:
-						active_players[sock] = people.Player(world, login_name)
-						print(f'New player {login_name} created by {sock.getsockname()}')
-						world.players.append(active_players[sock])
-						broadcast(sock, f'Welcome to the world, {active_players[sock].name}')
+						if code == '01':
+							verb = data[:10].strip()
+							action = data[10:]
+							print(f'Received (verb: action) {verb}: {action}')
 
+							player_action = actions.parse_player_action(self.active_players[sock], verb, action)
+							player_action.execute()
+
+						elif code == '00':
+							pass
+
+						elif code == '02':
+							if data[0] == '\'':
+								for s in [s for s in self.sockets if s != self.server]:
+									if self.active_players[s].location == self.active_players[sock].location:
+										self.broadcast(s, f'{self.active_players[sock].name} says, "{data[1:]}"')
+							if data[0] == '!':
+								for s in [s for s in self.sockets if s != self.server]:
+									if self.active_players[s].location == self.active_players[sock].location:
+										self.broadcast(s, f'{self.active_players[sock].name} yells, "{data[1:]}!"')
+
+			for sock in writable:
+				try:
+					message = self.broadcast_queues[sock].get_nowait()
+				except queue.Empty:
+					self.broadcasting.remove(sock)
 				else:
-					if code == '01':
-						verb = data[:10].strip()
-						action = data[10:]
-						print(f'Received (verb: action) {verb}: {action}')
+					self.broadcast(sock, message)
 
-						player_action = actions.parse_player_action(active_players[sock], verb, action)
-						response, observed_message = actions.execute_player_action(player_action)
-						if response:
-							broadcast(sock, response)
-						if observed_message:
-							for s in [s for s in sockets if s != sock and s != server]:
-								if active_players[s].detect_action(player_action):
-									broadcast(s, observed_message)
+			for sock in exceptional:
+				print(f'(From exceptional list) Lost connection from {sock.getsockname()}.')
+				self.close_client(sock)
 
-					elif code == '00':
-						pass
-
-					elif code == '02':
-						if data[0] == '\'':
-							for s in [s for s in sockets if s != server]:
-								if active_players[s].location == active_players[sock].location:
-									broadcast(s, f'{active_players[sock].name} says, "{data[1:]}"')
-						if data[0] == '!':
-							for s in [s for s in sockets if s != server]:
-								if active_players[s].location == active_players[sock].location:
-									broadcast(s, f'{active_players[sock].name} yells, "{data[1:]}!"')
-
-		for sock in writable:
-			try:
-				message = broadcast_queues[sock].get_nowait()
-			except:
-				pass
-
-		for sock in exceptional:
-			print(f'(From exceptional list) Lost connection from {sock.getsockname()}.')
-			close_client(sock)
-
-
-def close_client(sock):
-	print(f'Lost connection from {sock.getsockname()}.')
-	if sock in broadcasting:
-		broadcasting.remove(sock)
-	if sock in active_players:
-		del active_players[sock]
-	sockets.remove(sock)
-	del broadcast_queues[sock]
-	sock.close()
+	def close_client(self, sock):
+		print(f'Lost connection from {sock.getsockname()}.')
+		self.active_players[sock].sock = None
+		if sock in self.broadcasting:
+			self.broadcasting.remove(sock)
+		if sock in self.active_players:
+			del self.active_players[sock]
+		self.sockets.remove(sock)
+		del self.broadcast_queues[sock]
+		sock.close()

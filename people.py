@@ -57,8 +57,8 @@ class CarbonLife(): # Could inherit CarbonLife
 		self.name = name
 		self.description = self.name
 
-		# Behavior
-		self.active = False
+		# Automated Behavior
+		self.current_action = None
 		self.behavior_state = None
 
 		self.relationships = {} # target: number/string rank
@@ -208,6 +208,7 @@ class CarbonLife(): # Could inherit CarbonLife
 class Player(CarbonLife):
 	def __init__(self, world, name):
 		super().__init__(world, name)
+		self.socket = None # Gets assigned at login
 		self.inventory = [items.Stanget()]
 
 	def add_to_world(self):
@@ -230,12 +231,20 @@ class AI(CarbonLife):
 	def __init__(self, world, name):
 		super().__init__(world, name)
 
-		# Personal Background
+		# Background Info
 		self.mb = None
 		self.vocation = None
 
+		# Automated Behavior
 		self.current_action = None
-		self.action_timer = self.get_action_timer()
+		self.behavioral_state = None
+
+		self.action_interruption = None
+		self.behavior_interruption = None
+		self.priority_interruption = None
+
+
+		self.relationships = {} # target: number/string rank
 
 	def determine_behavior(self):
 		needs = self.check_needs
