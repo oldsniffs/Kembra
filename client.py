@@ -24,6 +24,7 @@ import actions
 import socket
 import datetime
 import threading
+import pickle
 
 from ui import *
 
@@ -55,6 +56,7 @@ class Client(tk.Tk):
         self.game_screen.player_input.focus_force()
         self.connect_prompt()
 
+    # Connection and Login Functions
     def connect_prompt(self):
         self.display_text_output('Kembra Station')
         self.display_text_output('By Biff Willoughburs')
@@ -145,27 +147,9 @@ class Client(tk.Tk):
                 print(f'RuntimeError: {e}. Goodbye!')
                 return
 
-    # def parse_player_action(player, verb, words):
-    #
-    #     player_action = ActionCommand()
-    #
-    #     player_action.subject = player
-    #     player_action.verb = verb
-    #
-    #     # strip() in case value is blank space. may not be necessary
-    #     words = words.split()
-    #
-    #     # I would check action instead of words, but unsure about blank space.
-    #     if not words:
-    #         return player_action
-    #
-    #     if len(words) == 1:
-    #         print(f'assigning {words[0]} as target')
-    #         player_action.target = words[0]
-    #
-    #     return player_action
+    # User Input Handling
 
-    def process_action(self, event):
+    def process_command(self, event):
         player_input = self.get_player_input()
         self.display_text_output(player_input, command_readback=True)
 
@@ -181,27 +165,58 @@ class Client(tk.Tk):
 
         words = player_input.lower().split()
 
-        if len(words) == 0:
+        if len(words) == 0: # Is this necessary / proper handling?
             self.display_text_output('Please enter something.')
             return None
 
         if words[0] in actions.verb_list: # this could be a function called here
-            if len(words) == 1 and words[0] in ['n', 'north', 'e', 'east', 'w', 'west', 's', 'south']:
-                words.append(words[0])
-                words[0] = 'go'
-
-            self.send_message(f'{words[0]:<{VERB_HEADER_LENGTH}}'+' '.join(words[1:]), code='01')
+            player_action_command = self.parse_player_action_command(words)
+            self.send_command(player_action_command)
 
         else:
             self.display_text_output(f'You want to {words[0]}? I don\'t even know what that is...', color_code='narrator')
             return False
 
+    def parse_player_action_command(self, words):
+        player_action = actions.Action()
+
+        if len(words) == 1 and words[0] in ['n', 'north', 'e', 'east', 'w', 'west', 's', 'south']:
+            player_action.verb = 'go'
+            player_action.target = self.clean_direction(words[0])
+            return player_action
+
+        # grab verb, chop it off list
+        player_action.verb = words[0]
+        del words[0]
+
+        if len(words) == 1:
+            player_action.target = words[0]
+
+        return player_action
+
+    def clean_direction(self, direction):
+        if direction == 'n':
+            return 'north'
+        if direction == 's':
+            return 'south'
+        if direction == 'e':
+            return 'east'
+        if direction == 'w':
+            return 'west'
+
+    def send_command(self, action_command, code='01'):
+        pickled_action_command = pickle.dumps(action_command)
+        self.socket.send(code.encode('utf-8'))
+        self.socket.send(pickled_action_command)
+
     def send_message(self, message, code='00'):
 
-        message_header = f'{len(message):<{HEADER_LENGTH}}'
+        if code == '00':
+            message_header = f'{len(message):<{HEADER_LENGTH}}'
 
-        print(f'Sending: {message}')
-        self.socket.send(message_header.encode('utf-8') + code.encode('utf-8') + message.encode('utf-8'))
+            print(f'Sending: {message}')
+            self.socket.send(code.encode('utf-8'))
+            self.socket.send(message_header.encode('utf-8') + message.encode('utf-8'))
 
     # ---- Key Bindings
 
@@ -221,7 +236,7 @@ class Client(tk.Tk):
         self.unbind_game_keys()
 
         BOUND_KEYS.append('<Return>')
-        self.bind('<Return>', self.process_action)
+        self.bind('<Return>', self.process_command)
         print('Game Keys Active')
 
     def bind_client_level_keys(self):

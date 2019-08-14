@@ -25,6 +25,7 @@ class World:
 		self.low_priority_timers = queue.Queue()
 
 		self.players = []
+		self.active_players = []
 		self.all_people_names = []
 		self.ai_population = []
 

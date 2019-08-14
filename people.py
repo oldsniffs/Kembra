@@ -246,6 +246,9 @@ class AI(CarbonLife):
 
 		self.relationships = {} # target: number/string rank
 
+	def determine_action(self):
+		pass
+
 	def determine_behavior(self):
 		needs = self.check_needs
 

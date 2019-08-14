@@ -13,12 +13,19 @@ def run_world(world): # Move to World class? Cant' see why not
         if ai.current_action:
             if ai.current_action.end_time < time.time():
                 continue
+            else:
+                ai.current_action.execute()
+                ai.determine_action()
 
         else:
             continue
 
+    for player in world.active_players:
+        if player.current_action.end_time < time.time():
+            pass
 
-class ServerApp: # In the future, is to be a tk.Tk
+
+class ServerApp: # In the future, this class will extend tk.Tk as a GUI
     def __init__(self):
         self.server = network.Server()
         self.world = locations.World()

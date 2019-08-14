@@ -1,10 +1,19 @@
 import select
 import socket
 import queue
+import pickle
 import time
 
 import people
 import actions
+
+"""Questions
+
+How much exception catching do I need through the recieve methods?
+They have yet to raise in testing, but will the server crash if they do?
+Basically, I currently don't have the experience/knowledge to know how to implement it
+
+"""
 
 """
 TODO: Lost socket function to close out connection, remove temp assets
@@ -51,12 +60,20 @@ class Server:
 		self.broadcasting = []  # sockets with outstanding broadcasts in queue
 		self.broadcast_queues = {}  # {socket: Queue} outgoing broadcasts stored in Queue
 
-	def receive_message(self, client_socket):
+	def receive_code(self, client_socket):
 
+		try:
+			code = client_socket.recv(CODE_LENGTH).decode('utf-8')
+			return code
+
+		except ConnectionResetError as e:
+			self.close_client(client_socket)
+
+	def receive_login(self, client_socket):
 		try:
 			print(client_socket)
 			header = client_socket.recv(HEADER_LENGTH).decode('utf-8')
-			code = client_socket.recv(CODE_LENGTH).decode('utf-8')
+			print(f'Header: {header}')
 
 			if not len(header):
 				raise Exception
@@ -64,19 +81,26 @@ class Server:
 			message_length = int(header)
 			message = client_socket.recv(message_length).decode('utf-8')
 
-			return code, message
+			return message
 
 		except ConnectionResetError as e:
 			print(f'ConnectionResetError from {client_socket.getsockname()}: {e}')
 			self.close_client(client_socket)
 			return None, None
 
+	def receive_command(self, client_socket):
+
+		action_command = client_socket.recv(4096)
+		return pickle.loads(action_command)
+
 	def broadcast(self, client_socket, message):
+
 		broadcast_header = f'{len(message):<{HEADER_LENGTH}}'
 		print(f'Broadcasting to {client_socket.getsockname()}: {broadcast_header} {message}')
 		client_socket.send(broadcast_header.encode('utf-8') + message.encode('utf-8'))
 
 	def queue_broadcast(self, recipient, message):
+
 		self.broadcast_queues[recipient.socket].put(message)
 		if recipient.socket not in self.broadcasting:
 			self.broadcasting.append(recipient.socket)
@@ -98,19 +122,19 @@ class Server:
 
 				elif sock in self.sockets:
 					try:
-						code, data = self.receive_message(sock)
+						code = self.receive_code(sock)
 					except Exception as e:
 						print('Exception reached: ', e)
 						self.close_client(sock)
 						continue
 
-					if sock not in self.active_players:
-						login_name = data
+					if code == '00' and sock not in self.active_players: # '00' can be used other than login, so both conditions here is ok
+						login_name = self.receive_login(sock)
 						if not login_name:
-							print(f'(From Readable) Lost connection from {sock.getsockname()} during login attempt.')
 							self.close_client(sock)
 
 						# Logging in
+						# Login sequence needs more granular structure
 						if login_name in [player.name for player in world.players]:
 							for player in world.players:
 								if login_name == player.name:
@@ -125,29 +149,28 @@ class Server:
 							self.active_players[sock].socket = sock
 							print(f'New player {login_name} created by {sock.getsockname()}')
 							world.players.append(self.active_players[sock])
+							world.active_players.append(self.active_players[sock])
 							self.broadcast(sock, f'Welcome to the world, {self.active_players[sock].name}')
 
-					else:
-						if code == '01':
-							verb = data[:10].strip()
-							action = data[10:]
-							print(f'Received (verb: action) {verb}: {action}')
+					elif code == '01':
+						# Get command, validate it, send into central loop
 
-							player_action = actions.parse_player_action(self.active_players[sock], verb, action)
-							player_action.execute()
+						player_action_command = self.receive_command(sock)
 
-						elif code == '00':
-							pass
+						player_action_command.subject = self.active_players[sock]
+						player_action_command.server = self
 
-						elif code == '02':
-							if data[0] == '\'':
-								for s in [s for s in self.sockets if s != self.server]:
-									if self.active_players[s].location == self.active_players[sock].location:
-										self.broadcast(s, f'{self.active_players[sock].name} says, "{data[1:]}"')
-							if data[0] == '!':
-								for s in [s for s in self.sockets if s != self.server]:
-									if self.active_players[s].location == self.active_players[sock].location:
-										self.broadcast(s, f'{self.active_players[sock].name} yells, "{data[1:]}!"')
+						player_action_command.execute() # Will be cut when central loop is ready to handle actions
+
+					# elif code == '02':
+					# 	if data[0] == '\'':
+					# 		for s in [s for s in self.sockets if s != self.server]:
+					# 			if self.active_players[s].location == self.active_players[sock].location:
+					# 				self.broadcast(s, f'{self.active_players[sock].name} says, "{data[1:]}"')
+					# 	if data[0] == '!':
+					# 		for s in [s for s in self.sockets if s != self.server]:
+					# 			if self.active_players[s].location == self.active_players[sock].location:
+					# 				self.broadcast(s, f'{self.active_players[sock].name} yells, "{data[1:]}!"')
 
 			for sock in writable:
 				try:

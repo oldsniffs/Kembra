@@ -7,17 +7,6 @@ TODO: A covert system. Subject attempts to do something hidden, a check is perfo
 
 """
 
-# For Reference
-"""
-From network, code to broadcast observations
-if response:
-    self.broadcast(sock, response)
-if observed_message:
-    for s in [s for s in self.sockets if s != sock and s != self.server]:
-        if self.active_players[s].detect_action(player_action):
-            self.broadcast(s, observed_message)
-"""
-
 
 system_commands = ['main menu', 'pause', 'quit']
 player_only_verbs = ['i', 'inv', 'inventory', 'friends']
@@ -30,8 +19,8 @@ verb_list = world_verbs + subject_verbs + social_verbs + item_verbs + player_onl
 ALL_VALID_TARGETS = ''
 
 
-class ActionCommand:
-    def __init__(self, verb, subject): # delete verb argument, it's here just for now to dev functions
+class Action:
+    def __init__(self, subject=None, verb=None): # delete verb argument, it's here just for now to dev functions
         self.subject = subject
         self.verb = verb
         self.target = None
@@ -40,10 +29,14 @@ class ActionCommand:
         print(self.verb)
 
         self.end_time = 0
-        self.action_function = eval(self.verb)
-        self.server = self.subject.server
+
+        # These 2 require server side validation to properly instantiate. A more elegant solution in the future
+        # Also, really seems this is not the best way to get a reference to the server in the class
+        self.action_function = None
+        self.server = None
 
     def execute(self):
+        self.action_function = eval(self.verb)
 
         print(self.server.broadcast_queues, self.subject.name, self.subject.socket)
         response = self.action_function(self)
@@ -80,18 +73,13 @@ def get_go_directions(target):
     clean_target = ''
     opposite_dir = ''
 
-    # n to north to be done in client side parsing
-    if target == 'n' or target == 'north':
-        clean_target = 'north'
+    if target == 'north':
         opposite_dir = 'south'
-    elif target == 'e' or target == 'east':
-        clean_target = 'east'
+    elif target == 'east':
         opposite_dir = 'west'
-    elif target == 'w' or target == 'west':
-        clean_target = 'west'
+    elif target == 'west':
         opposite_dir = 'east'
-    elif target == 's' or target == 'south':
-        clean_target = 'south'
+    elif target == 'south':
         opposite_dir = 'north'
 
     return clean_target, opposite_dir
@@ -165,21 +153,6 @@ def execute_action_command(action_command):
 
     return response, observation
 
-
-def parse_player_action(player, verb, words): # Gonna get cut
-
-    player_action = ActionCommand(verb, player)
-    print(f'player at parse: {player}')
-
-    # strip() in case value is blank space. may not be necessary
-    words = words.split()
-
-    # I would check action instead of words, but unsure about blank space.
-    if not words:
-        return player_action
-
-    if len(words) == 1:
-        print(f'assigning {words[0]} as target')
-        player_action.target = words[0]
-
-    return player_action
+def validate_target(action_command):
+    pass
+    # General all-size validation
