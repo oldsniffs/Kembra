@@ -59,7 +59,7 @@ class Client(tk.Tk):
     # Connection and Login Functions
     def connect_prompt(self):
         self.display_text_output('Kembra Station')
-        self.display_text_output('By Biff Willoughburs')
+        self.display_text_output('By Biff Willoughbers')
         self.display_text_output('To join a game, enter a server address to connect to: ')
 
         self.bind_connect()
@@ -96,7 +96,7 @@ class Client(tk.Tk):
         valid_chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.']
         for char in server_ip:
             if char not in valid_chars:
-                self.display_text_output(f'{char} is not a valid character. Please specify a valid server address to connect to.', command_readback=True)
+                self.display_text_output(f'{server_ip} is not a valid server address. Provide a valid address to connect to.', command_readback=True)
                 return False
 
         self.server_ip = server_ip
@@ -158,10 +158,6 @@ class Client(tk.Tk):
             return None
         elif player_input == 'menu':
             pass
-        elif player_input[0] == '\'' or player_input[0] == '!':
-            # TODO: check for invalid chars
-            self.send_message(player_input, code='02')
-            return False
 
         words = player_input.lower().split()
 
@@ -169,22 +165,35 @@ class Client(tk.Tk):
             self.display_text_output('Please enter something.')
             return None
 
-        if words[0] in actions.verb_list: # this could be a function called here
-            player_action_command = self.parse_player_action_command(words)
+        if words[0] in actions.verb_list or words[0][0] in ['"', '\'']: # this could be a function called here. Actually I'm not sure the "clean code" way to do it
+            player_action_command = self.parse_player_input(words)
             self.send_command(player_action_command)
 
         else:
             self.display_text_output(f'You want to {words[0]}? I don\'t even know what that is...', color_code='narrator')
             return False
 
-    def parse_player_action_command(self, words):
+    def parse_player_input(self, words):
         player_action = actions.Action()
 
+        # There are some special handling cases that do not use [verb: the rest] format
+        # Including move directions, and speaking with
+        # A supplementary function can be designed later, but for now they will be parsed and handled here
         if len(words) == 1 and words[0] in ['n', 'north', 'e', 'east', 'w', 'west', 's', 'south']:
             player_action.verb = 'go'
             player_action.target = self.clean_direction(words[0])
+            return player_action # If safe, remove this and rely on function's primary return line
+
+        if words[0][0] in ['\'', '"', '!']:
+            if words[0][0] == '!':
+                player_action.verb = 'yell'
+            else:
+                player_action.verb = 'speak'
+            words[0] = words[0][1:]
+            player_action.target = ' '.join(words)
             return player_action
 
+        # This marks the start of the function's standard intent
         # grab verb, chop it off list
         player_action.verb = words[0]
         del words[0]
@@ -197,12 +206,14 @@ class Client(tk.Tk):
     def clean_direction(self, direction):
         if direction == 'n':
             return 'north'
-        if direction == 's':
+        elif direction == 's':
             return 'south'
-        if direction == 'e':
+        elif direction == 'e':
             return 'east'
-        if direction == 'w':
+        elif direction == 'w':
             return 'west'
+        else:
+            return direction
 
     def send_command(self, action_command, code='01'):
         pickled_action_command = pickle.dumps(action_command)

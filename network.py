@@ -47,7 +47,7 @@ port = 1234
 world_events = []
 
 
-class Server:
+class Server: # Game server would be better class name, to distinguish from the server attribute
 	def __init__(self):
 		self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -161,16 +161,6 @@ class Server:
 						player_action_command.server = self
 
 						player_action_command.execute() # Will be cut when central loop is ready to handle actions
-
-					# elif code == '02':
-					# 	if data[0] == '\'':
-					# 		for s in [s for s in self.sockets if s != self.server]:
-					# 			if self.active_players[s].location == self.active_players[sock].location:
-					# 				self.broadcast(s, f'{self.active_players[sock].name} says, "{data[1:]}"')
-					# 	if data[0] == '!':
-					# 		for s in [s for s in self.sockets if s != self.server]:
-					# 			if self.active_players[s].location == self.active_players[sock].location:
-					# 				self.broadcast(s, f'{self.active_players[sock].name} yells, "{data[1:]}!"')
 
 			for sock in writable:
 				try:

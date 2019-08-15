@@ -29,7 +29,7 @@ class World:
 		self.all_people_names = []
 		self.ai_population = []
 
-		self.players.append(people.Player(self, 'Fred'))
+		self.players.append(people.AI(self, 'Fred'))
 
 		self.populate()
 

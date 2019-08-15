@@ -10,11 +10,11 @@ TODO: A covert system. Subject attempts to do something hidden, a check is perfo
 
 system_commands = ['main menu', 'pause', 'quit']
 player_only_verbs = ['i', 'inv', 'inventory', 'friends']
-world_verbs = ['look', 'go', 'n', 'north', 'e', 'east', 'w', 'west', 's', 'south']
+world_verbs = ['speak', 'look', 'go', 'n', 'north', 'e', 'east', 'w', 'west', 's', 'south']
 subject_verbs = ['eat', 'drink']  # Subject acts on self
-social_verbs = ['talk', 'shop', 'buy', 'sell', 'give']  # Involves other people
+interaction_verbs = ['talk', 'shop', 'buy', 'sell', 'give']  # Involves other people
 item_verbs = ['get', 'take', 'drop']
-verb_list = world_verbs + subject_verbs + social_verbs + item_verbs + player_only_verbs
+verb_list = world_verbs + subject_verbs + interaction_verbs + item_verbs + player_only_verbs
 
 ALL_VALID_TARGETS = ''
 
@@ -69,8 +69,7 @@ def look(action_command):
     return response
 
 
-def get_go_directions(target):
-    clean_target = ''
+def get_opposite_direction(target):
     opposite_dir = ''
 
     if target == 'north':
@@ -82,7 +81,7 @@ def get_go_directions(target):
     elif target == 'south':
         opposite_dir = 'north'
 
-    return clean_target, opposite_dir
+    return opposite_dir
 
 
 def go(action_command):
@@ -90,11 +89,11 @@ def go(action_command):
         response = 'Where do you want to go?'
 
     elif action_command.target in ['n', 'e', 'w', 's', 'north', 'east', 'west', 'south']:
-        departing_direction, arrive_from_direction = get_go_directions(action_command.target)
+        arrive_from_direction = get_opposite_direction(action_command.target)
 
         if action_command.target in action_command.subject.location.get_exits():
             player_observers, ai_observers = get_observers(action_command)
-            current_observation = f'{action_command.subject.name} leaves heading {departing_direction}.'
+            current_observation = f'{action_command.subject.name} leaves heading {action_command.target}.'
             for player_observer in player_observers:
                 action_command.server.queue_broadcast(player_observer, current_observation)
 
@@ -118,6 +117,17 @@ def go(action_command):
     else:
         response = 'I don\'t understand where you\'re trying to go.'
 
+    return response
+
+
+def speak(action_command):
+
+    for person in action_command.subject.location.denizens:
+        if type(person).__name__ == 'Player' and person!= action_command.subject:
+            print(person.name)
+            action_command.server.queue_broadcast(person, f'{action_command.subject.name} says, "{action_command.target}"')
+
+    response = f'You say, "{action_command.target}"'
     return response
 
 
