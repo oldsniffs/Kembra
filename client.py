@@ -149,7 +149,7 @@ class Client(tk.Tk):
 
     # User Input Handling
 
-    def process_command(self, event):
+    def process_input(self, event):
         player_input = self.get_player_input()
         self.display_text_output(player_input, command_readback=True)
 
@@ -166,42 +166,42 @@ class Client(tk.Tk):
             return None
 
         if words[0] in actions.verb_list or words[0][0] in ['"', '\'']: # this could be a function called here. Actually I'm not sure the "clean code" way to do it
-            player_action_command = self.parse_player_input(words)
-            self.send_command(player_action_command)
+            player_command = self.parse_player_input(words)
+            self.send_command(player_command)
 
         else:
             self.display_text_output(f'You want to {words[0]}? I don\'t even know what that is...', color_code='narrator')
             return False
 
     def parse_player_input(self, words):
-        player_action = actions.Action()
+        player_command = actions.Command()
 
         # There are some special handling cases that do not use [verb: the rest] format
         # Including move directions, and speaking with
         # A supplementary function can be designed later, but for now they will be parsed and handled here
         if len(words) == 1 and words[0] in ['n', 'north', 'e', 'east', 'w', 'west', 's', 'south']:
-            player_action.verb = 'go'
-            player_action.target = self.clean_direction(words[0])
-            return player_action # If safe, remove this and rely on function's primary return line
+            player_command.verb = 'go'
+            player_command.target = self.clean_direction(words[0])
+            return player_command # If safe, remove this and rely on function's primary return line
 
         if words[0][0] in ['\'', '"', '!']:
             if words[0][0] == '!':
-                player_action.verb = 'yell'
+                player_command.verb = 'yell'
             else:
-                player_action.verb = 'speak'
+                player_command.verb = 'speak'
             words[0] = words[0][1:]
-            player_action.target = ' '.join(words)
-            return player_action
+            player_command.target = ' '.join(words)
+            return player_command
 
         # This marks the start of the function's standard intent
         # grab verb, chop it off list
-        player_action.verb = words[0]
+        player_command.verb = words[0]
         del words[0]
 
         if len(words) == 1:
-            player_action.target = words[0]
+            player_command.target = words[0]
 
-        return player_action
+        return player_command
 
     def clean_direction(self, direction):
         if direction == 'n':
@@ -247,7 +247,7 @@ class Client(tk.Tk):
         self.unbind_game_keys()
 
         BOUND_KEYS.append('<Return>')
-        self.bind('<Return>', self.process_command)
+        self.bind('<Return>', self.process_input)
         print('Game Keys Active')
 
     def bind_client_level_keys(self):

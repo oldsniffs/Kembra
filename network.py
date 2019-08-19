@@ -41,13 +41,13 @@ CODE_LENGTH = 2
 HEADER_AND_CODE = HEADER_LENGTH + 2
 
 
-server_address = '10.0.0.230'
+server_address = '10.0.0.121'
 port = 1234
 
 world_events = []
 
 
-class Server: # Game server would be better class name, to distinguish from the server attribute
+class Server:  # Game server would be better class name, to distinguish from the server attribute
 	def __init__(self):
 		self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -155,12 +155,10 @@ class Server: # Game server would be better class name, to distinguish from the 
 					elif code == '01':
 						# Get command, validate it, send into central loop
 
-						player_action_command = self.receive_command(sock)
+						player_command = self.receive_command(sock)
 
-						player_action_command.subject = self.active_players[sock]
-						player_action_command.server = self
-
-						player_action_command.execute() # Will be cut when central loop is ready to handle actions
+						if not self.active_players[sock].current_action:
+							self.active_players[sock].current_action = actions.Action(self, self.active_players[sock], player_command.verb, player_command.target, player_command.quantity)
 
 			for sock in writable:
 				try:

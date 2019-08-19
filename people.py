@@ -211,6 +211,8 @@ class Player(CarbonLife):
 		self.socket = None # Gets assigned at login
 		self.inventory = [items.Stanget()]
 
+		self.current_action = None
+
 	def add_to_world(self): # Some of this should be in CarbonLife and this should just extend it for what players need
 		self.world.players.append(self)
 		self.world.all_people_names.append(self.name)

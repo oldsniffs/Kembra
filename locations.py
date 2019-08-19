@@ -4,6 +4,7 @@ import people
 import os
 import xml.etree.ElementTree as et
 import queue
+import datetime
 
 # TODO: Can the following code be moved into World.load_map ?
 # TODO: Different exit generation for outdoors (open) vs indoors?
@@ -21,6 +22,8 @@ class World:
 		self.map = {}
 		self.load_map()
 
+		self.clock = datetime.datetime.now()
+
 		self.high_priority_timers = queue.Queue()
 		self.low_priority_timers = queue.Queue()
 
@@ -32,6 +35,9 @@ class World:
 		self.players.append(people.AI(self, 'Fred'))
 
 		self.populate()
+
+	def get_time(self):
+		return self.clock.now()
 
 	def load_map(self):
 		for zone in world_tree:

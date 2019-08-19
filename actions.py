@@ -1,4 +1,4 @@
-# Home of action_command shit, including verb lists, and parse and execute functions
+# Home of Action shit, including Action class, action functions, and verb category lists
 
 """
 TODO: Checks for whether a target has been given by user should be done in client, and not sent without one.
@@ -7,8 +7,10 @@ TODO: A covert system. Subject attempts to do something hidden, a check is perfo
 
 """
 
+import datetime
 
 system_commands = ['main menu', 'pause', 'quit']
+
 player_only_verbs = ['i', 'inv', 'inventory', 'friends']
 world_verbs = ['speak', 'look', 'go', 'n', 'north', 'e', 'east', 'w', 'west', 's', 'south']
 subject_verbs = ['eat', 'drink']  # Subject acts on self
@@ -16,33 +18,65 @@ interaction_verbs = ['talk', 'shop', 'buy', 'sell', 'give']  # Involves other pe
 item_verbs = ['get', 'take', 'drop']
 verb_list = world_verbs + subject_verbs + interaction_verbs + item_verbs + player_only_verbs
 
-ALL_VALID_TARGETS = ''
+ALL_VALID_TARGETS = '' # Likely deprecated
+
+# TODO: System for action timers to be affected by stats, ie player speed reducing travel time.
+#  Likely placed in get_completion_time.
+#  Possibly based on specific function or function category
+BASE_SHORT_ACTION_TIMERS = {
+    # function.__name__: (seconds, microseconds)
+    'look': (0, 0),
+    'go': (3, 0),
+}
+BASE_LONG_ACTION_TIMERS = {}
 
 
-class Action:
-    def __init__(self, subject=None, verb=None): # delete verb argument, it's here just for now to dev functions
-        self.subject = subject
-        self.verb = verb
+# Command is solely client side. Stores human input to convert into an Action by the server
+class Command:
+    def __init__(self):
+        self.verb = None
         self.target = None
         self.direct_object = None
         self.quantity = 0
-        print(self.verb)
 
-        self.end_time = 0
 
-        # These 2 require server side validation to properly instantiate. A more elegant solution in the future
-        # Also, really seems this is not the best way to get a reference to the server in the class
-        self.action_function = None
-        self.server = None
+class Action:
+    # Conceivably, could split into subclasses based on verb category
+    def __init__(self, server, subject, verb, target, quantity):
+        self.server = server
+        self.subject = subject
+        self.action_function = eval(verb)
+        self.target = target
+        self.direct_object = None  # Placeholder. Probably will be used later.
+        self.quantity = quantity
+        self.completion_time = self.get_completion_time()
+
+        # AIs will pass in target object. Players pass a string. Strings need to be converted to objects
+        if type(self.target) == str:
+            if self.target not in ['north', 'south', 'east', 'west']:
+                self.target = self.validate_target()
+
+        print(f'Action: {self.action_function} assigned to Subject: {self.subject}. Completion at {self.completion_time} with current time: {self.subject.world.get_time()}')
 
     def execute(self):
-        self.action_function = eval(self.verb)
 
-        print(self.server.broadcast_queues, self.subject.name, self.subject.socket)
         response = self.action_function(self)
         if self.subject in self.server.active_players.values():
             if response:
                 self.server.queue_broadcast(self.subject, response)
+        # To delete the action, must make sure all referenes are removed. Then garbage collection will delete it.
+        self.subject.current_action = None
+
+    def get_completion_time(self):
+        # Completion to be derived from base time, player speed/reflexes, and current stamina/clarity
+        seconds, microseconds = BASE_SHORT_ACTION_TIMERS[self.action_function.__name__]
+        completion_time = self.subject.world.get_time() + datetime.timedelta(seconds=seconds, microseconds=microseconds)
+        return completion_time
+
+    def validate_target(self):
+        # Special cases are look, go, and info. The rest will either acquire targets in current location (whereby
+        # one size will fit most), or for some special actions, nearby locations.
+        pass
 
 
 def look(action_command):
@@ -69,26 +103,11 @@ def look(action_command):
     return response
 
 
-def get_opposite_direction(target):
-    opposite_dir = ''
-
-    if target == 'north':
-        opposite_dir = 'south'
-    elif target == 'east':
-        opposite_dir = 'west'
-    elif target == 'west':
-        opposite_dir = 'east'
-    elif target == 'south':
-        opposite_dir = 'north'
-
-    return opposite_dir
-
-
 def go(action_command):
     if not action_command.target:
         response = 'Where do you want to go?'
 
-    elif action_command.target in ['n', 'e', 'w', 's', 'north', 'east', 'west', 'south']:
+    elif action_command.target in ['north', 'east', 'west', 'south']:
         arrive_from_direction = get_opposite_direction(action_command.target)
 
         if action_command.target in action_command.subject.location.get_exits():
@@ -118,6 +137,21 @@ def go(action_command):
         response = 'I don\'t understand where you\'re trying to go.'
 
     return response
+
+
+def get_opposite_direction(target):
+    opposite_dir = ''
+
+    if target == 'north':
+        opposite_dir = 'south'
+    elif target == 'east':
+        opposite_dir = 'west'
+    elif target == 'west':
+        opposite_dir = 'east'
+    elif target == 'south':
+        opposite_dir = 'north'
+
+    return opposite_dir
 
 
 def speak(action_command):
