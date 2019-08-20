@@ -58,13 +58,19 @@ class Action:
 
         print(f'Action: {self.action_function} assigned to Subject: {self.subject}. Completion at {self.completion_time} with current time: {self.subject.world.get_time()}')
 
+    def initiate(self):
+        pass
+
     def execute(self):
 
         response = self.action_function(self)
         if self.subject in self.server.active_players.values():
             if response:
-                self.server.queue_broadcast(self.subject, response)
-        # To delete the action, must make sure all referenes are removed. Then garbage collection will delete it.
+                print(f'now queuing response: {response} -- {self.subject.world.clock.now()}')
+                self.server.broadcast(self.subject.socket, response)
+                print(f'response queued -- {self.subject.world.clock.now()}')
+        # To delete the action, just make sure all references are removed and garbage collection will remove it.
+        print(f'clearing subject action -- {self.subject.world.clock.now()}')
         self.subject.current_action = None
 
     def get_completion_time(self):
@@ -114,14 +120,14 @@ def go(action_command):
             player_observers, ai_observers = get_observers(action_command)
             current_observation = f'{action_command.subject.name} leaves heading {action_command.target}.'
             for player_observer in player_observers:
-                action_command.server.queue_broadcast(player_observer, current_observation)
+                action_command.server.broadcast(player_observer.socket, current_observation)
 
             action_command.subject.move(direction=action_command.target)
 
             player_observers, ai_observers = get_observers(action_command)
             current_observation = f'{action_command.subject.name} arrives from the {arrive_from_direction}.'
             for player_observer in player_observers:
-                action_command.server.queue_broadcast(player_observer, current_observation)
+                action_command.server.broadcast(player_observer.socket, current_observation)
 
             response = action_command.subject.look()
 
@@ -159,7 +165,7 @@ def speak(action_command):
     for person in action_command.subject.location.denizens:
         if type(person).__name__ == 'Player' and person!= action_command.subject:
             print(person.name)
-            action_command.server.queue_broadcast(person, f'{action_command.subject.name} says, "{action_command.target}"')
+            action_command.server.broadcast(person.socket, f'{action_command.subject.name} says, "{action_command.target}"')
 
     response = f'You say, "{action_command.target}"'
     return response

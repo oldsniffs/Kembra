@@ -50,7 +50,7 @@ class Vocation():
 		self.name = ''
 
 
-class CarbonLife(): # Could inherit CarbonLife
+class CarbonLife:
 	def __init__(self, world, name): # vocation, skills, attributes): #
 
 		self.world = world
@@ -77,7 +77,6 @@ class CarbonLife(): # Could inherit CarbonLife
 	def add_to_world(self):
 		self.world.all_people_names.append(self.name)
 		self.location.denizens.append(self)
-		self.world.ai_population.append(self)
 
 	def describe(self):
 		pass

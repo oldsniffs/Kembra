@@ -24,6 +24,7 @@ class World:
 
 		self.clock = datetime.datetime.now()
 
+
 		self.high_priority_timers = queue.Queue()
 		self.low_priority_timers = queue.Queue()
 

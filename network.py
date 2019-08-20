@@ -105,6 +105,8 @@ class Server:  # Game server would be better class name, to distinguish from the
 		if recipient.socket not in self.broadcasting:
 			self.broadcasting.append(recipient.socket)
 
+		print(f'server.queue_broadcast of message: {message} complete! -- {recipient.world.clock.now()}')
+
 	def run_server(self, world):
 		print('Server online: Accepting connections...')
 		while True:
@@ -150,6 +152,7 @@ class Server:  # Game server would be better class name, to distinguish from the
 							print(f'New player {login_name} created by {sock.getsockname()}')
 							world.players.append(self.active_players[sock])
 							world.active_players.append(self.active_players[sock])
+							# world.high_priority_timers[self.active_players[sock]] = queue.Queue()
 							self.broadcast(sock, f'Welcome to the world, {self.active_players[sock].name}')
 
 					elif code == '01':
@@ -157,8 +160,8 @@ class Server:  # Game server would be better class name, to distinguish from the
 
 						player_command = self.receive_command(sock)
 
-						if not self.active_players[sock].current_action:
-							self.active_players[sock].current_action = actions.Action(self, self.active_players[sock], player_command.verb, player_command.target, player_command.quantity)
+						player_action = actions.Action(self, self.active_players[sock], player_command.verb, player_command.target, player_command.quantity)
+						self.active_players[sock].current_action = player_action
 
 			for sock in writable:
 				try:
