@@ -31,7 +31,7 @@ from ui import *
 HEADER_LENGTH = 10
 VERB_HEADER_LENGTH = 10
 
-PORT = 1234
+PORT = 4400
 TIMEOUT = 3
 
 BOUND_KEYS = ['<Return>']

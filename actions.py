@@ -14,7 +14,7 @@ system_commands = ['main menu', 'pause', 'quit']
 player_only_verbs = ['i', 'inv', 'inventory', 'friends']
 world_verbs = ['speak', 'look', 'go', 'n', 'north', 'e', 'east', 'w', 'west', 's', 'south']
 subject_verbs = ['eat', 'drink']  # Subject acts on self
-interaction_verbs = ['talk', 'shop', 'buy', 'sell', 'give']  # Involves other people
+interaction_verbs = ['slap', 'talk', 'shop', 'buy', 'sell', 'give']  # Involves other people
 item_verbs = ['get', 'take', 'drop']
 verb_list = world_verbs + subject_verbs + interaction_verbs + item_verbs + player_only_verbs
 
@@ -27,6 +27,9 @@ BASE_SHORT_ACTION_TIMERS = {
     # function.__name__: (seconds, microseconds)
     'look': (0, 0),
     'go': (3, 0),
+    'speak': (0, 0),
+    'get': (0, 50),
+    'slap': (1, 0)
 }
 BASE_LONG_ACTION_TIMERS = {}
 
@@ -52,13 +55,17 @@ class Action:
         self.completion_time = self.get_completion_time()
 
         # AIs will pass in target object. Players pass a string. Strings need to be converted to objects
-        if type(self.target) == str:
-            if self.target not in ['north', 'south', 'east', 'west']:
-                self.target = self.validate_target()
+
+        # Un-comment following block after testing with butch
+
+        # if type(self.target) == str:
+        #     if self.target not in ['north', 'south', 'east', 'west']:
+        #         self.target = self.validate_target()
 
         print(f'Action: {self.action_function} assigned to Subject: {self.subject}. Completion at {self.completion_time} with current time: {self.subject.world.get_time()}')
 
     def initiate(self):
+        #  broadcasts beginning response, and initial observations for a timed action
         pass
 
     def execute(self):
@@ -74,7 +81,8 @@ class Action:
         self.subject.current_action = None
 
     def get_completion_time(self):
-        # Completion to be derived from base time, player speed/reflexes, and current stamina/clarity
+        # Completion to be derived from base time, player speed/reflexes, current stamina/clarity, and quantity
+        # if applicable
         seconds, microseconds = BASE_SHORT_ACTION_TIMERS[self.action_function.__name__]
         completion_time = self.subject.world.get_time() + datetime.timedelta(seconds=seconds, microseconds=microseconds)
         return completion_time
@@ -180,6 +188,54 @@ def get_observers(action_command):
             player_observers.append(active_player)
 
     return player_observers, ai_observers
+
+
+def get(action_command):
+
+    if not action_command.target:
+        response = 'What do you want to get?'
+
+    else:
+        for i in action_command.subject.location.items:
+            if i.name == action_command.target:
+                action_command.subject.location.items.remove(i)
+                action_command.subject.inventory.append(i)
+                # TODO: As of now it picks up 1st match and stops.
+                #  Could pick up all, prompt user to pick up all, or user can enter pick up all items
+                break
+
+        # I love the idea of having swappable synonyms for get.
+        # Could collect lingos, or just have some random swappables
+        response = f'You get the {action_command.target}.'
+
+        player_observers, ai_observers = get_observers(action_command)
+        current_observation = f'{action_command.subject.name} picks up a {action_command.target.name}.'
+        for player_observer in player_observers:
+            action_command.server.broadcast(player_observer.socket, current_observation)
+
+        return response
+
+
+def slap(action_command):
+
+    for den in action_command.subject.location.denizens:
+        print(f'{action_command.target} compared to {den.name}')
+        if den.name == action_command.target:
+            print('SLAP:    target acquired')
+            action_command.target = den
+
+    if type(action_command.target) is str:
+        response = 'Who are you trying to slap?'
+        return response
+
+    player_observers, ai_observers = get_observers(action_command)
+    for player_observer in player_observers:
+        current_observation = f'{action_command.subject.name} slaps {action_command.target.name} in the face! DAMN!!'
+        if player_observer.name is action_command.target.name:
+            current_observation = f'{action_command.subject.name} slaps you in face. Ouch!'
+        action_command.server.broadcast(player_observer.socket, current_observation)
+    response = f'You slap {action_command.target.name} in the face! Hell yeah take that!!'
+    return response
 
 
 def execute_action_command(action_command):

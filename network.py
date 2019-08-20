@@ -42,7 +42,7 @@ HEADER_AND_CODE = HEADER_LENGTH + 2
 
 
 server_address = '10.0.0.121'
-port = 1234
+port = 4400
 
 world_events = []
 
@@ -70,10 +70,11 @@ class Server:  # Game server would be better class name, to distinguish from the
 			self.close_client(client_socket)
 
 	def receive_login(self, client_socket):
+
+		client_socket.settimeout(.1)
 		try:
-			print(client_socket)
+
 			header = client_socket.recv(HEADER_LENGTH).decode('utf-8')
-			print(f'Header: {header}')
 
 			if not len(header):
 				raise Exception
